@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Hex : MonoBehaviour
+public class TriangleHex : MonoBehaviour
 {
     private Vector2Int indexCoordinates;
 
-    private List<Hex> neighbours;
+    private List<TriangleHex> neighbours;
 
     private Material basic;
     private Material selected;
@@ -25,7 +25,7 @@ public class Hex : MonoBehaviour
         get => terrain;
     }
 
-    public List<Hex> Neighbours{
+    public List<TriangleHex> Neighbours{
         set => neighbours = value;
         get => neighbours;
     }
@@ -36,7 +36,7 @@ public class Hex : MonoBehaviour
     }
     public void InitiateHex(Vector2Int iC, Material b, Material s, Material n, Material bG){
         indexCoordinates = iC;
-        neighbours = new List<Hex>();
+        neighbours = new List<TriangleHex>();
         showNeighbours = true;
         basic = b;
         selected = s;
@@ -59,7 +59,7 @@ public class Hex : MonoBehaviour
     public void ToggleHighlight(){
         if(showNeighbours){
             SetBackgroundMaterial(selected);
-            foreach(Hex n in neighbours){
+            foreach(TriangleHex n in neighbours){
                 if (n != null){
                     n.SetBackgroundMaterial(neighbour);
                 }
@@ -67,7 +67,7 @@ public class Hex : MonoBehaviour
             showNeighbours = false;
         } else if (!showNeighbours){
             SetBackgroundMaterial(backGround);
-            foreach(Hex n in neighbours){
+            foreach(TriangleHex n in neighbours){
                 if (n != null){
                     n.SetBackgroundMaterial(backGround);
                 }
@@ -77,18 +77,21 @@ public class Hex : MonoBehaviour
     }
 
     public void SetMaterial(Material mat){
-        gameObject.GetComponent<MeshRenderer>().material = mat;
+        for(int i = 0; i < 6; i++){
+            transform.GetChild(i).GetComponent<MeshRenderer>().material = mat;
+        }
+        //gameObject.GetComponent<MeshRenderer>().material = mat;
     }
 
     public void SetBackgroundMaterial(Material mat){
-        transform.GetChild(0).gameObject.GetComponent<MeshRenderer>().material = mat;
+        transform.GetChild(6).gameObject.GetComponent<MeshRenderer>().material = mat;
     }
 
     public Material GetMaterial(){
-        return gameObject.GetComponent<MeshRenderer>().material;
+        return transform.GetChild(0).GetComponent<MeshRenderer>().material;
     }
 
-    public void AddNeighbour(Hex nb){
+    public void AddNeighbour(TriangleHex nb){
         neighbours.Add(nb);
     }
 }

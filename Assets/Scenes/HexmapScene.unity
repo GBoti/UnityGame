@@ -395,6 +395,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 266190097}
   m_CullTransparentMesh: 1
+--- !u!1 &319480522
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 319480523}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &319480523
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319480522}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 423.31558, y: -142.67401, z: 437.63538}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &373886223
 GameObject:
   m_ObjectHideFlags: 0
@@ -653,15 +684,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c415629da3665be4ba4d07180f9bf77f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridSize: {x: 3, y: 3}
-  size: 1
+  gridSize: {x: 4, y: 4}
+  size: 3
   selectedHex: {x: 0, y: 0}
   ground: {fileID: 2100000, guid: 39bd5adef0990d9478d51ce590c13b2c, type: 2}
   water: {fileID: 2100000, guid: 799c3a09b7de7cf4a8126fe4d9e327d6, type: 2}
   backGround: {fileID: 2100000, guid: 4c2de09dd560cb340935b02cb4961edc, type: 2}
   selected: {fileID: 2100000, guid: 47fd3c7db77e2b547987c40d3f41482a, type: 2}
   neighbour: {fileID: 2100000, guid: eb52ae5d196e0b14f9e440652d03b318, type: 2}
-  hex: {fileID: 8889972556978838179, guid: 02b78b0cac92acc42b772a1d1f9e1acb, type: 3}
+  hex: {fileID: 6541103473750662954, guid: 9e07c08aaeb3f064285e8682931da83b, type: 3}
 --- !u!4 &824475716
 Transform:
   m_ObjectHideFlags: 0
@@ -731,6 +762,18 @@ PrefabInstance:
     - target: {fileID: 4189153620160856813, guid: 2c242d93e0d7a534b970b76e4f8b0c1e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4384174896840944207, guid: 2c242d93e0d7a534b970b76e4f8b0c1e, type: 3}
+      propertyPath: fovZoomAmount
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4384174896840944207, guid: 2c242d93e0d7a534b970b76e4f8b0c1e, type: 3}
+      propertyPath: movementSpeed
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4384174898048411192, guid: 2c242d93e0d7a534b970b76e4f8b0c1e, type: 3}
+      propertyPath: field of view
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2c242d93e0d7a534b970b76e4f8b0c1e, type: 3}
