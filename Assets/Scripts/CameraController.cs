@@ -13,11 +13,13 @@ public class CameraController : MonoBehaviour
     public float movementSpeed;
     public float movementTime;
     public float rotationAmount;
-    public Vector3 zoomAmount;
+    public float fovZoomAmount;
+    //public Vector3 zoomAmount;
 
     public Vector3 newPosition;
     public Quaternion newRotation;
-    public Vector3 newZoom;
+    //public Vector3 newZoom;
+    public float fovNewZoom;
 
     public Vector3 dragStartPosition;
     public Vector3 dragCurrentPosition;
@@ -31,7 +33,8 @@ public class CameraController : MonoBehaviour
 
         newPosition = transform.position;
         newRotation = transform.rotation;
-        newZoom = cameraTransform.localPosition;
+        //newZoom = cameraTransform.localPosition;
+        fovNewZoom = cameraTransform.gameObject.GetComponent<Camera>().fieldOfView;
     }
 
     // Update is called once per frame
@@ -57,7 +60,13 @@ public class CameraController : MonoBehaviour
     {
         if(Input.mouseScrollDelta.y != 0)
         {
-            newZoom += Input.mouseScrollDelta.y * zoomAmount;
+            fovNewZoom -= Input.mouseScrollDelta.y * fovZoomAmount;
+            if (fovNewZoom < 2){
+                fovNewZoom = 2;
+            }
+            if(fovNewZoom > 60){
+                fovNewZoom = 60;
+            }
         }
 
         if(Input.GetMouseButtonDown(0))
@@ -140,17 +149,8 @@ public class CameraController : MonoBehaviour
             newRotation *= Quaternion.Euler(Vector3.up * -rotationAmount);
         }
 
-        if(Input.GetKey(KeyCode.R))
-        {
-            newZoom += zoomAmount;
-        }
-        if(Input.GetKey(KeyCode.F))
-        {
-            newZoom -= zoomAmount;
-        }
-
         transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime * movementTime);
         transform.rotation = Quaternion.Lerp(transform.rotation, newRotation, Time.deltaTime * movementTime);
-        cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, newZoom, Time.deltaTime * movementTime);
+        cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = fovNewZoom;
     }
 }
