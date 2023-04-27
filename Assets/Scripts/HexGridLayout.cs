@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Hexre collider
+
 public class HexGridLayout : MonoBehaviour
 {
     [Header("Grid Settings")]
@@ -29,6 +31,7 @@ public class HexGridLayout : MonoBehaviour
     private void OnEnable()
     {
         LayoutGrid();
+        GenerateMap();
     }
 
     public void LayoutGrid()
@@ -44,12 +47,10 @@ public class HexGridLayout : MonoBehaviour
                 tile.transform.SetParent(gameObject.transform);
                 tile.transform.localScale = new Vector3(size*20, size*12, size*20);
                 tile.transform.localRotation *= Quaternion.Euler(0f, 0f, 0f);
-                tile.SetMaterial(ground);
                 tile.Terrain = "ground";
-                tile.InitiateHex(new Vector2Int(x,y), ground, selected, neighbour, backGround);
+                tile.InitiateHex(new Vector2Int(x,y), ground, selected, neighbour, backGround, ground, water);
                 // Current hex will go in the current = y * gridSize.x + x; slot in hexes
                 int current = y * gridSize.x + x;
-                Debug.Log($"Current place in list: {current}");
                 // Need to add the already existing hexes, but need to check if they exist
                 // (In the case of hex 0,0 there will be no other existing hexes)
                 // In case of a non-existent hex, set the value to null
@@ -60,8 +61,8 @@ public class HexGridLayout : MonoBehaviour
                 if ( x != 0 ){
                     foreach(TriangleHex h in hexes){
                         if(h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y){
-                            tile.AddNeighbour(h);
-                            h.AddNeighbour(tile);
+                            tile.AddNeighbour(h, side.right);
+                            h.AddNeighbour(tile, side.left);
                         }
                     }
                 }
@@ -69,14 +70,14 @@ public class HexGridLayout : MonoBehaviour
                     foreach(TriangleHex h in hexes){
                         if(y % 2 == 0){
                             if(h.IndexCoordinates.x == x && h.IndexCoordinates.y == y - 1){
-                                tile.AddNeighbour(h);
-                                h.AddNeighbour(tile);
+                                tile.AddNeighbour(h, side.bottomright);
+                                h.AddNeighbour(tile, side.topleft);
                             }
                         }
                         if(y % 2 != 0){
                             if(h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y - 1){
-                                tile.AddNeighbour(h);
-                                h.AddNeighbour(tile);
+                                tile.AddNeighbour(h, side.bottomright);
+                                h.AddNeighbour(tile, side.topleft);
                             }
                         }
                     }
@@ -85,14 +86,14 @@ public class HexGridLayout : MonoBehaviour
                     foreach(TriangleHex h in hexes){
                         if(y % 2 == 0){
                             if(h.IndexCoordinates.x == x + 1 && h.IndexCoordinates.y == y - 1){
-                                tile.AddNeighbour(h);
-                                h.AddNeighbour(tile);
+                                tile.AddNeighbour(h, side.bottomleft);
+                                h.AddNeighbour(tile, side.topright);
                             }
                         }
                         if(y % 2 != 0){
                             if(h.IndexCoordinates.x == x && h.IndexCoordinates.y == y - 1){
-                                tile.AddNeighbour(h);
-                                h.AddNeighbour(tile);
+                                tile.AddNeighbour(h, side.bottomleft);
+                                h.AddNeighbour(tile, side.topright);
                             }
                         }
                     }
@@ -103,12 +104,35 @@ public class HexGridLayout : MonoBehaviour
                 hexes.Add(tile);
             }
         }
-        for(int i = 0; i < hexes.Count; i++){
+        /*for(int i = 0; i < hexes.Count; i++){
             GenerateTerrain(hexes[i]);
             GenerateTerrain(hexes[hexes.Count - 1 - i]);
-        }
+        }*/
     }
 
+    public void GenerateMap(){
+        hexes[hexes.Count/2].Collapse();
+        while(true){
+            TriangleHex fewest = null;
+            bool finished = true;
+            foreach(TriangleHex h in hexes){
+                if(fewest == null && h.PotentialStates.Count > 1){
+                    fewest = h;
+                    finished = false;
+                }
+                else if (h.PotentialStates.Count > 1 && h.PotentialStates.Count < fewest.PotentialStates.Count){
+                    fewest = h;
+                    finished = false;
+                }
+            }
+            if(finished){
+                break;
+            }
+            fewest.Collapse();
+        }
+        Debug.Log("Generated map");
+    }
+    /*
     public void GenerateTerrain(TriangleHex h){
         int groundChance = 50;
         int waterChance = 50;
@@ -136,8 +160,7 @@ public class HexGridLayout : MonoBehaviour
             groundChance = 0;
         }
 
-        System.Random rnd = new System.Random();
-        int num = rnd.Next(1, 100);
+        int num = UnityEngine.Random.Range(1,100);
         if(num <= groundChance){
             h.SetMaterial(ground);
             h.Terrain = "ground";
@@ -148,6 +171,7 @@ public class HexGridLayout : MonoBehaviour
             h.Basic = water;
         }
     }
+    */
 
     public void HighlightHex(){
         foreach (TriangleHex h in hexes)
