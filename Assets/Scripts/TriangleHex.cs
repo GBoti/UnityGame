@@ -118,7 +118,7 @@ public class TriangleHex : MonoBehaviour
         SetMaterial(potentialStates.States[0]);
         foreach(KeyValuePair<side, TriangleHex> kvp in neighbours){
             if(kvp.Value.PotentialStates.Count > 1){
-             Material m = transform.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
+             Material m = transform.GetChild((int)kvp.Key + 1).GetComponent<MeshRenderer>().sharedMaterial;
              kvp.Value.Reduce(kvp.Key, materialRuleMap[m]);
             }
         }
