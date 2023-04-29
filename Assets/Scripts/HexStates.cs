@@ -88,6 +88,7 @@ public class HexStates{
         new State("ground_w_tr_br_bl", new rule[6] {rule.ground,rule.ground,rule.water,rule.ground,rule.water,rule.water}),
 
         new State("ground_w_r_br_bl", new rule[6] {rule.ground,rule.ground,rule.ground,rule.water,rule.water,rule.water}),
+        
         //four water
         new State("ground_w_l_tl_tr_r", new rule[6] {rule.water,rule.water,rule.water,rule.water,rule.ground,rule.ground}),
         new State("ground_w_l_tl_tr_br", new rule[6] {rule.water,rule.water,rule.water,rule.ground,rule.water,rule.ground}),
@@ -141,7 +142,7 @@ public class HexStates{
     }
 
     public void Reduce(side s, rule r){ //r is the middle of the cell
-        List<State> itemsToRemove = states.FindAll(state => state.rules[(int)s] == r);
+        List<State> itemsToRemove = states.FindAll(state => state.rules[(int)s] != r);
         foreach(State itr in itemsToRemove){
             states.Remove(itr);
         }

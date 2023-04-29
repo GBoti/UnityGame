@@ -18,6 +18,7 @@ public class TriangleHex : MonoBehaviour
     private HexStates potentialStates;
     private Dictionary<rule,Material> ruleMaterialMap;
     private Dictionary<Material, rule> materialRuleMap;
+    private float height;
 
     public Vector2Int IndexCoordinates{
         set => indexCoordinates = value;
@@ -36,6 +37,11 @@ public class TriangleHex : MonoBehaviour
 
     public HexStates PotentialStates{
         get => potentialStates;
+    }
+
+    public float Height{
+        set => height = value;
+        get => height;
     }
 
     public void InitiateHex(Vector2Int iC, Material b, Material s, Material n, Material bG,Material g, Material w){
@@ -118,14 +124,23 @@ public class TriangleHex : MonoBehaviour
         SetMaterial(potentialStates.States[0]);
         foreach(KeyValuePair<side, TriangleHex> kvp in neighbours){
             if(kvp.Value.PotentialStates.Count > 1){
-             Material m = transform.GetChild((int)kvp.Key + 1).GetComponent<MeshRenderer>().sharedMaterial;
-             kvp.Value.Reduce(kvp.Key, materialRuleMap[m]);
+                int s = (int)kvp.Key;
+                if(s >= 3){
+                    s -= 3;
+                } else {
+                    s += 3;
+                }
+                s++;
+                Material m = transform.GetChild(s).GetComponent<MeshRenderer>().sharedMaterial;
+                Debug.Log("Material: " + m + ", rule: " + materialRuleMap[m] + " Sender: " + kvp.Key + " Reciever: " + (side)(s-1) + " Sender coords: " + indexCoordinates);
+                kvp.Value.Reduce(kvp.Key, materialRuleMap[m]);
             }
         }
     }
 
     public void Reduce(side s, rule r){
         potentialStates.Reduce(s, r);
+        Debug.Log("Side: " + s + " ,rule: " +  r);
         if(potentialStates.Count == 1){
             Collapse();
         }

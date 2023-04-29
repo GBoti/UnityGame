@@ -684,7 +684,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c415629da3665be4ba4d07180f9bf77f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridSize: {x: 4, y: 4}
+  gridSize: {x: 5, y: 5}
   size: 3
   selectedHex: {x: 0, y: 0}
   ground: {fileID: 2100000, guid: 39bd5adef0990d9478d51ce590c13b2c, type: 2}

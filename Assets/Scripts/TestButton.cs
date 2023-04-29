@@ -16,7 +16,7 @@ public class TestButton : MonoBehaviour
         {
             long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             grid.LayoutGrid();
-            grid.GenerateMap();
+            grid.Procedural_Map_Generate();
             Debug.Log(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t);
         });
     }

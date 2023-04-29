@@ -31,7 +31,7 @@ public class HexGridLayout : MonoBehaviour
     private void OnEnable()
     {
         LayoutGrid();
-        GenerateMap();
+        Procedural_Map_Generate();
     }
 
     public void LayoutGrid()
@@ -104,12 +104,44 @@ public class HexGridLayout : MonoBehaviour
                 hexes.Add(tile);
             }
         }
-        /*for(int i = 0; i < hexes.Count; i++){
-            GenerateTerrain(hexes[i]);
-            GenerateTerrain(hexes[hexes.Count - 1 - i]);
-        }*/
+    }
+    
+    //Procedural generation
+    //PerlinNoise -> height
+    //Pathfinder egyik oldalról másikra height alapján
+    //Utána height és szomszéd alapján -> hex material
+
+    public void Procedural_Map_Generate(){
+        float perlinNoiseOffsetX = UnityEngine.Random.Range(0, 100);
+        float perlinNoiseOffsetY = UnityEngine.Random.Range(0, 100);
+        foreach(TriangleHex h in hexes){
+            Vector2 pos = h.IndexCoordinates;
+            float scaler = 0.15f;
+            h.Height = (int)(Mathf.PerlinNoise((pos.x + perlinNoiseOffsetX) * scaler, (pos.y + perlinNoiseOffsetY) * scaler)*10);
+            Debug.Log("Coords: " + pos.x + "," + pos.y + ", height: " + h.Height);
+        }
+        Vector2Int startPos;
+        Vector2Int endPos;
+        if(UnityEngine.Random.Range(0,100) % 2 == 0) {
+            int riverPos = UnityEngine.Random.Range(0,gridSize.y-1);
+            startPos = new Vector2Int(0,riverPos);
+            endPos = new Vector2Int(gridSize.x-1, gridSize.y-1-riverPos);
+        } else {
+            int riverPos = UnityEngine.Random.Range(0,gridSize.x);
+            startPos = new Vector2Int(riverPos,0);
+            endPos = new Vector2Int(gridSize.x-1-riverPos, gridSize.y-1);
+        }
+        List<TriangleHex> path = FindPath(startPos, endPos);
     }
 
+    public List<TriangleHex> FindPath(Vector2Int start, Vector2Int end){
+        List<TriangleHex> path = new List<TriangleHex>();
+        path.Add(hexes.Find(h => h.IndexCoordinates == start));
+        //TODO finish
+        return path;
+    }
+
+    /*
     public void GenerateMap(){
         hexes[hexes.Count/2].Collapse();
         while(true){
@@ -131,45 +163,6 @@ public class HexGridLayout : MonoBehaviour
             fewest.Collapse();
         }
         Debug.Log("Generated map");
-    }
-    /*
-    public void GenerateTerrain(TriangleHex h){
-        int groundChance = 50;
-        int waterChance = 50;
-        int groundNeighbours = 0;
-        int waterNeighbours = 0;
-        foreach (TriangleHex n in h.Neighbours){
-            if(n.Terrain == "ground"){
-                groundNeighbours++;
-            }
-            if(n.Terrain == "water"){
-                waterNeighbours++;
-            }
-        }
-
-        if(groundNeighbours/h.Neighbours.Count*100 > 80){
-            waterChance += 10;
-            groundChance -= 10;
-        }
-        if(waterNeighbours >= 3){
-            waterChance -= 40;
-            groundChance += 40;
-        }
-        if(waterNeighbours == 6){
-            waterChance = 100;
-            groundChance = 0;
-        }
-
-        int num = UnityEngine.Random.Range(1,100);
-        if(num <= groundChance){
-            h.SetMaterial(ground);
-            h.Terrain = "ground";
-            h.Basic = ground;
-        } else if (num <= groundChance + waterChance){
-            h.SetMaterial(water);
-            h.Terrain = "water";
-            h.Basic = water;
-        }
     }
     */
 
