@@ -684,9 +684,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c415629da3665be4ba4d07180f9bf77f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridSize: {x: 5, y: 5}
+  gridSize: {x: 50, y: 50}
   size: 3
   selectedHex: {x: 0, y: 0}
+  heightWeight: 0.9
+  pathWeight: 1
   ground: {fileID: 2100000, guid: 39bd5adef0990d9478d51ce590c13b2c, type: 2}
   water: {fileID: 2100000, guid: 799c3a09b7de7cf4a8126fe4d9e327d6, type: 2}
   backGround: {fileID: 2100000, guid: 4c2de09dd560cb340935b02cb4961edc, type: 2}

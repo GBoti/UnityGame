@@ -16,35 +16,46 @@ public class TriangleHex : MonoBehaviour
     private bool showNeighbours;
     private string terrain;
     private HexStates potentialStates;
-    private Dictionary<rule,Material> ruleMaterialMap;
+    private Dictionary<rule, Material> ruleMaterialMap;
     private Dictionary<Material, rule> materialRuleMap;
     private float height;
 
-    public Vector2Int IndexCoordinates{
+    public Vector2Int IndexCoordinates
+    {
         set => indexCoordinates = value;
         get => indexCoordinates;
     }
 
-    public string Terrain{
+    public string Terrain
+    {
         set => terrain = value;
         get => terrain;
     }
 
-    public Material Basic{
+    public Material Basic
+    {
         set => basic = value;
         get => basic;
     }
 
-    public HexStates PotentialStates{
+    public HexStates PotentialStates
+    {
         get => potentialStates;
     }
 
-    public float Height{
+    public float Height
+    {
         set => height = value;
         get => height;
     }
 
-    public void InitiateHex(Vector2Int iC, Material b, Material s, Material n, Material bG,Material g, Material w){
+    public Dictionary<side, TriangleHex> Neighbours
+    {
+        get => neighbours;
+    }
+
+    public void InitiateHex(Vector2Int iC, Material b, Material s, Material n, Material bG, Material g, Material w)
+    {
         indexCoordinates = iC;
         neighbours = new Dictionary<side, TriangleHex>();
         showNeighbours = true;
@@ -61,92 +72,118 @@ public class TriangleHex : MonoBehaviour
         materialRuleMap[w] = rule.water;
         materialRuleMap[g] = rule.ground;
 
-        Debug.Log("Keys: " + w + ", " + g);
+        //Debug.Log("Keys: " + w + ", " + g);
 
         potentialStates = new HexStates();
     }
-/*
-    void Update(){
-        if(Input.GetMouseButtonDown(0)){
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if(Physics.Raycast(ray, out hit)){
-                if(hit.transform.name == "Hex"){
-                    
+    /*
+        void Update(){
+            if(Input.GetMouseButtonDown(0)){
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if(Physics.Raycast(ray, out hit)){
+                    if(hit.transform.name == "Hex"){
+
+                    }
                 }
             }
         }
-    }
-*/
-    public void ToggleHighlight(){
-        if(showNeighbours){
+    */
+    public void ToggleHighlight()
+    {
+        if (showNeighbours)
+        {
             SetBackgroundMaterial(selected);
-            foreach(KeyValuePair<side, TriangleHex> n in neighbours){
+            foreach (KeyValuePair<side, TriangleHex> n in neighbours)
+            {
                 n.Value.SetBackgroundMaterial(neighbour);
             }
             showNeighbours = false;
-        } else if (!showNeighbours){
+        }
+        else if (!showNeighbours)
+        {
             SetBackgroundMaterial(backGround);
-            foreach(KeyValuePair<side, TriangleHex> n in neighbours){
+            foreach (KeyValuePair<side, TriangleHex> n in neighbours)
+            {
                 n.Value.SetBackgroundMaterial(backGround);
             }
             showNeighbours = true;
         }
     }
 
-    public void SetMaterial(State state){
+    public void SetMaterial(Material m)
+    {
+        basic = m;
+        for (int i = 0; i < transform.childCount - 1; i++)
+        {
+            transform.GetChild(i).GetComponent<MeshRenderer>().material = m;
+        }
+    }
+
+    public void SetMaterialByState(State state)
+    {
         bool isWater = true;
-        for(int i = 0; i < state.rules.Length; i++){
-            transform.GetChild(i+1).GetComponent<MeshRenderer>().material = ruleMaterialMap[state.rules[i]];
-            if(state.rules[i] == rule.ground){
+        for (int i = 0; i < state.rules.Length; i++)
+        {
+            transform.GetChild(i + 1).GetComponent<MeshRenderer>().material = ruleMaterialMap[state.rules[i]];
+            if (state.rules[i] == rule.ground)
+            {
                 isWater = false;
             }
         }
-        transform.GetChild(0).GetComponent<MeshRenderer>().material = isWater?ruleMaterialMap[rule.water]:ruleMaterialMap[rule.ground];
+        transform.GetChild(0).GetComponent<MeshRenderer>().material = isWater ? ruleMaterialMap[rule.water] : ruleMaterialMap[rule.ground];
     }
 
-    public void SetBackgroundMaterial(Material mat){
+    public void SetBackgroundMaterial(Material mat)
+    {
         transform.GetChild(7).gameObject.GetComponent<MeshRenderer>().material = mat;
     }
 
-    public Material GetMaterial(){
+    public Material GetMaterial()
+    {
         return transform.GetChild(0).GetComponent<MeshRenderer>().material;
     }
 
-    public void AddNeighbour(TriangleHex nb, side s){
+    public void AddNeighbour(TriangleHex nb, side s)
+    {
         neighbours[s] = nb;
     }
 
-    public void Collapse(){
-        if(potentialStates.Count != 1){
+    public void Collapse()
+    {
+        if (potentialStates.Count != 1)
+        {
             potentialStates.Collapse();
         }
-        SetMaterial(potentialStates.States[0]);
-        foreach(KeyValuePair<side, TriangleHex> kvp in neighbours){
-            if(kvp.Value.PotentialStates.Count > 1){
+        SetMaterialByState(potentialStates.States[0]);
+        foreach (KeyValuePair<side, TriangleHex> kvp in neighbours)
+        {
+            if (kvp.Value.PotentialStates.Count > 1)
+            {
                 int s = (int)kvp.Key;
-                if(s >= 3){
+                if (s >= 3)
+                {
                     s -= 3;
-                } else {
+                }
+                else
+                {
                     s += 3;
                 }
                 s++;
                 Material m = transform.GetChild(s).GetComponent<MeshRenderer>().sharedMaterial;
-                Debug.Log("Material: " + m + ", rule: " + materialRuleMap[m] + " Sender: " + kvp.Key + " Reciever: " + (side)(s-1) + " Sender coords: " + indexCoordinates);
+                Debug.Log("Material: " + m + ", rule: " + materialRuleMap[m] + " Sender: " + kvp.Key + " Reciever: " + (side)(s - 1) + " Sender coords: " + indexCoordinates);
                 kvp.Value.Reduce(kvp.Key, materialRuleMap[m]);
             }
         }
     }
 
-    public void Reduce(side s, rule r){
+    public void Reduce(side s, rule r)
+    {
         potentialStates.Reduce(s, r);
-        Debug.Log("Side: " + s + " ,rule: " +  r);
-        if(potentialStates.Count == 1){
+        Debug.Log("Side: " + s + " ,rule: " + r);
+        if (potentialStates.Count == 1)
+        {
             Collapse();
         }
-    }
-
-    public void Finished(){
-        potentialStates = null;
     }
 }
