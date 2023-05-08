@@ -694,6 +694,10 @@ MonoBehaviour:
   backGround: {fileID: 2100000, guid: 4c2de09dd560cb340935b02cb4961edc, type: 2}
   selected: {fileID: 2100000, guid: 47fd3c7db77e2b547987c40d3f41482a, type: 2}
   neighbour: {fileID: 2100000, guid: eb52ae5d196e0b14f9e440652d03b318, type: 2}
+  forest: {fileID: 2100000, guid: 52313e1fce0efe643bde2e2e790b164c, type: 2}
+  sand: {fileID: 2100000, guid: bb46c2e7a4b31e94da716193a1709aa1, type: 2}
+  mountain: {fileID: 2100000, guid: b570170554b45744a85edb85f8ffb706, type: 2}
+  mountainPeak: {fileID: 2100000, guid: 9aaeda2508806764eb8899fbab441437, type: 2}
   hex: {fileID: 6541103473750662954, guid: 9e07c08aaeb3f064285e8682931da83b, type: 3}
 --- !u!4 &824475716
 Transform:

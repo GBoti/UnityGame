@@ -88,7 +88,13 @@ public class TriangleHex : MonoBehaviour
                 }
             }
         }
+
+        public void SetTerrainHeight(float h)
+        {
+            transform.GetChild(0).localPosition.Set(transform.GetChild(0).localPosition.x, transform.GetChild(0).localPosition.y + h, transform.GetChild(0).localPosition.z);
+        }
     */
+
     public void ToggleHighlight()
     {
         if (showNeighbours)

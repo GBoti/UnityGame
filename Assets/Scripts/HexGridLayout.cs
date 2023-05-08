@@ -21,11 +21,17 @@ public class HexGridLayout : MonoBehaviour
     public float heightWeight;
     public float pathWeight;
 
+    [Header("Materials")]
+
     public Material ground;
     public Material water;
     public Material backGround;
     public Material selected;
     public Material neighbour;
+    public Material forest;
+    public Material sand;
+    public Material mountain;
+    public Material mountainPeak;
 
     public GameObject hex;
 
@@ -173,7 +179,17 @@ public class HexGridLayout : MonoBehaviour
         foreach (TriangleHex h in path)
         {
             h.Height = -1;
-            //If needed, surrounding hexes heigth modification
+            foreach (TriangleHex n in h.Neighbours.Values)
+            {
+                if (n.Height != -1 && n.Height < 7)
+                {
+                    n.Height = -0.5f;
+                }
+                if (n.Height >= 9)
+                {
+                    n.Height = 8;
+                }
+            }
         }
 
         foreach (TriangleHex h in hexes)
@@ -186,6 +202,28 @@ public class HexGridLayout : MonoBehaviour
             else
             {
                 h.SetMaterial(ground);
+            }
+
+            switch (h.Height)
+            {
+                case -1:
+                    h.SetMaterial(water);
+                    break;
+                case -0.5f:
+                    h.SetMaterial(sand);
+                    break;
+                case < 3:
+                    h.SetMaterial(ground);
+                    break;
+                case < 7:
+                    h.SetMaterial(forest);
+                    break;
+                case < 9:
+                    h.SetMaterial(mountain);
+                    break;
+                default:
+                    h.SetMaterial(mountainPeak);
+                    break;
             }
         }
     }
