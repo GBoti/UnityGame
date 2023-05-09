@@ -14,9 +14,6 @@ public class HexGridLayout : MonoBehaviour
     [Header("Tile Settings")]
     public float size = 1f;
 
-    [Header("Selected hex")]
-    public Vector2Int selectedHex;
-
     [Header("Pathfinding weights")]
     public float heightWeight;
     public float pathWeight;
@@ -324,17 +321,6 @@ public class HexGridLayout : MonoBehaviour
         Debug.Log("Generated map");
     }
     */
-
-    public void HighlightHex()
-    {
-        foreach (TriangleHex h in hexes)
-        {
-            if (h.IndexCoordinates == selectedHex)
-            {
-                h.ToggleHighlight();
-            }
-        }
-    }
 
     public void DestroyGrid()
     {

@@ -13,7 +13,7 @@ public class TriangleHex : MonoBehaviour
     private Material selected;
     private Material neighbour;
     private Material backGround;
-    private bool showNeighbours;
+    private bool highlighted;
     private string terrain;
     private HexStates potentialStates;
     private Dictionary<rule, Material> ruleMaterialMap;
@@ -58,7 +58,7 @@ public class TriangleHex : MonoBehaviour
     {
         indexCoordinates = iC;
         neighbours = new Dictionary<side, TriangleHex>();
-        showNeighbours = true;
+        highlighted = true;
         basic = b;
         selected = s;
         neighbour = n;
@@ -95,25 +95,23 @@ public class TriangleHex : MonoBehaviour
         }
     */
 
+    public void Clicked()
+    {
+        Debug.Log("I have been clicked");
+        ToggleHighlight();
+    }
+
     public void ToggleHighlight()
     {
-        if (showNeighbours)
+        if (highlighted)
         {
             SetBackgroundMaterial(selected);
-            foreach (KeyValuePair<side, TriangleHex> n in neighbours)
-            {
-                n.Value.SetBackgroundMaterial(neighbour);
-            }
-            showNeighbours = false;
+            highlighted = false;
         }
-        else if (!showNeighbours)
+        else if (!highlighted)
         {
             SetBackgroundMaterial(backGround);
-            foreach (KeyValuePair<side, TriangleHex> n in neighbours)
-            {
-                n.Value.SetBackgroundMaterial(backGround);
-            }
-            showNeighbours = true;
+            highlighted = true;
         }
     }
 
