@@ -30,11 +30,16 @@ public class HexGridLayout : MonoBehaviour
     public Material mountain;
     public Material mountainPeak;
 
+    [Header("Info panel")]
+    public InfoPanel infoPanel;
+
+    [Header("Hex base")]
     public GameObject hex;
 
     private readonly float sqrt3 = Mathf.Sqrt(3);
     private List<TriangleHex> hexes = new List<TriangleHex>();
     private List<GameObject> backgroundHexes = new List<GameObject>();
+    private TriangleHex currentSelected;
 
     public struct PathfindingNeighbour
     {
@@ -49,8 +54,11 @@ public class HexGridLayout : MonoBehaviour
 
     private void OnEnable()
     {
+        long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         LayoutGrid();
+        Debug.Log("Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         Procedural_Map_Generate();
+        Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
     }
 
     public void LayoutGrid()
@@ -67,7 +75,7 @@ public class HexGridLayout : MonoBehaviour
                 tile.transform.localScale = new Vector3(size * 20, size * 12, size * 20);
                 tile.transform.localRotation *= Quaternion.Euler(0f, 0f, 0f);
                 tile.Terrain = "ground";
-                tile.InitiateHex(new Vector2Int(x, y), ground, selected, neighbour, backGround, ground, water);
+                tile.InitiateHex(new Vector2Int(x, y), ground, selected, backGround, ground, water);
                 // Current hex will go in the current = y * gridSize.x + x; slot in hexes
                 int current = y * gridSize.x + x;
                 // Need to add the already existing hexes, but need to check if they exist
@@ -191,37 +199,34 @@ public class HexGridLayout : MonoBehaviour
 
         foreach (TriangleHex h in hexes)
         {
-            //Debug.Log("Coords: " + h.IndexCoordinates.x + "," + h.IndexCoordinates.y + ", height: " + h.Height);
-            if (h.Height == -1)
-            {
-                h.SetMaterial(water);
-            }
-            else
-            {
-                h.SetMaterial(ground);
-            }
-
             switch (h.Height)
             {
                 case -1:
                     h.SetMaterial(water);
+                    h.Terrain = "Water";
                     break;
                 case -0.5f:
                     h.SetMaterial(sand);
+                    h.Terrain = "Sand";
                     break;
                 case < 3:
                     h.SetMaterial(ground);
+                    h.Terrain = "Meadow";
                     break;
                 case < 7:
                     h.SetMaterial(forest);
+                    h.Terrain = "Forest";
                     break;
                 case < 9:
                     h.SetMaterial(mountain);
+                    h.Terrain = "Mountain";
                     break;
                 default:
                     h.SetMaterial(mountainPeak);
+                    h.Terrain = "Snowy Peak";
                     break;
             }
+            h.GenerateResources();
         }
     }
 
@@ -256,71 +261,27 @@ public class HexGridLayout : MonoBehaviour
             }
             path.RemoveAt(path.Count - 1);
         }
-
         return null;
     }
 
-    public List<TriangleHex> FindPath(Vector2Int start, Vector2Int end)
+    public void ManageSelected(TriangleHex clicked)
     {
-        Debug.Log("Start: " + start + ", end: " + end);
-        List<TriangleHex> path = new List<TriangleHex>();
-        path.Add(hexes.Find(h => h.IndexCoordinates == start));
-        bool done = false;
-        while (!done)
+        infoPanel.Hide();
+        if (currentSelected != null)
         {
-            TriangleHex best = null;
-            float bestValue = float.MaxValue;
-
-            foreach (TriangleHex n in path[path.Count - 1].Neighbours.Values)
-            {
-                if (!path.Contains(n))
-                {
-                    float currentValue = ((n.Height - path[path.Count - 1].Height) * heightWeight) + (Mathf.Sqrt(Mathf.Pow((end - n.IndexCoordinates).x, 2) + Mathf.Pow((end - n.IndexCoordinates).y, 2)) * pathWeight);
-                    if (currentValue < bestValue)
-                    {
-                        best = n;
-                        bestValue = currentValue;
-                    }
-                }
-            }
-
-            Debug.Log("The best one: " + best.IndexCoordinates);
-            path.Add(best);
-            best.SetMaterial(selected);
-
-            if (best.IndexCoordinates == end)
-            {
-                done = true;
-            }
+            currentSelected.Declicked();
         }
-        return path;
-        //Rekurzívan hogy elkerüljük a saját farokba harapást
-    }
-
-    /*
-    public void GenerateMap(){
-        hexes[hexes.Count/2].Collapse();
-        while(true){
-            TriangleHex fewest = null;
-            bool finished = true;
-            foreach(TriangleHex h in hexes){
-                if(fewest == null && h.PotentialStates.Count > 1){
-                    fewest = h;
-                    finished = false;
-                }
-                else if (h.PotentialStates.Count > 1 && h.PotentialStates.Count < fewest.PotentialStates.Count){
-                    fewest = h;
-                    finished = false;
-                }
-            }
-            if(finished){
-                break;
-            }
-            fewest.Collapse();
+        if (currentSelected == clicked)
+        {
+            currentSelected = null;
         }
-        Debug.Log("Generated map");
+        else
+        {
+            currentSelected = clicked;
+            clicked.Clicked();
+            infoPanel.Show(clicked);
+        }
     }
-    */
 
     public void DestroyGrid()
     {
@@ -362,4 +323,19 @@ public class HexGridLayout : MonoBehaviour
 
         return new Vector3(xPosition, 0, -yPosition);
     }
+
+    /*
+    TODO: On holding alt display resources on hexes
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftAlt))
+        {
+
+        }
+        if (Input.GetKeyUp(KeyCode.LeftAlt))
+        {
+
+        }
+    }
+    */
 }

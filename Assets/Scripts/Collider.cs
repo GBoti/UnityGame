@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class Collider : MonoBehaviour
 {
+    [SerializeField]
+    private TriangleHex th;
     private void OnMouseDown()
     {
-        transform.parent.transform.GetComponent<TriangleHex>().Clicked();
-        //transform.parent.transform.parent.transform.GetComponent<HexGridLayout>().
+        GameObject.Find("HexLayout").GetComponent<HexGridLayout>().ManageSelected(
+            th
+        );
     }
 }

@@ -5,20 +5,17 @@ using UnityEngine;
 public class TriangleHex : MonoBehaviour
 {
     private Vector2Int indexCoordinates;
-
-    //private List<TriangleHex> neighbours;
     private Dictionary<side, TriangleHex> neighbours;
-
     private Material basic;
     private Material selected;
-    private Material neighbour;
     private Material backGround;
-    private bool highlighted;
     private string terrain;
-    private HexStates potentialStates;
-    private Dictionary<rule, Material> ruleMaterialMap;
-    private Dictionary<Material, rule> materialRuleMap;
+    private Dictionary<string, float> resources;
+    //private HexStates potentialStates;
+    //private Dictionary<rule, Material> ruleMaterialMap;
+    //private Dictionary<Material, rule> materialRuleMap;
     private float height;
+    private List<GameObject> occupants;
 
     public Vector2Int IndexCoordinates
     {
@@ -38,10 +35,12 @@ public class TriangleHex : MonoBehaviour
         get => basic;
     }
 
+    /*
     public HexStates PotentialStates
     {
         get => potentialStates;
     }
+    */
 
     public float Height
     {
@@ -54,16 +53,22 @@ public class TriangleHex : MonoBehaviour
         get => neighbours;
     }
 
-    public void InitiateHex(Vector2Int iC, Material b, Material s, Material n, Material bG, Material g, Material w)
+    public Dictionary<string, float> Resources
+    {
+        get => resources;
+        set => resources = value;
+    }
+
+    public void InitiateHex(Vector2Int iC, Material b, Material s, Material bG, Material g, Material w)
     {
         indexCoordinates = iC;
         neighbours = new Dictionary<side, TriangleHex>();
-        highlighted = true;
         basic = b;
         selected = s;
-        neighbour = n;
         backGround = bG;
+        resources = new Dictionary<string, float>();
 
+        /*
         ruleMaterialMap = new Dictionary<rule, Material>();
         ruleMaterialMap[rule.water] = w;
         ruleMaterialMap[rule.ground] = g;
@@ -72,47 +77,18 @@ public class TriangleHex : MonoBehaviour
         materialRuleMap[w] = rule.water;
         materialRuleMap[g] = rule.ground;
 
-        //Debug.Log("Keys: " + w + ", " + g);
-
         potentialStates = new HexStates();
+        */
     }
-    /*
-        void Update(){
-            if(Input.GetMouseButtonDown(0)){
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if(Physics.Raycast(ray, out hit)){
-                    if(hit.transform.name == "Hex"){
-
-                    }
-                }
-            }
-        }
-
-        public void SetTerrainHeight(float h)
-        {
-            transform.GetChild(0).localPosition.Set(transform.GetChild(0).localPosition.x, transform.GetChild(0).localPosition.y + h, transform.GetChild(0).localPosition.z);
-        }
-    */
 
     public void Clicked()
     {
-        Debug.Log("I have been clicked");
-        ToggleHighlight();
+        SetBackgroundMaterial(selected);
     }
 
-    public void ToggleHighlight()
+    public void Declicked()
     {
-        if (highlighted)
-        {
-            SetBackgroundMaterial(selected);
-            highlighted = false;
-        }
-        else if (!highlighted)
-        {
-            SetBackgroundMaterial(backGround);
-            highlighted = true;
-        }
+        SetBackgroundMaterial(backGround);
     }
 
     public void SetMaterial(Material m)
@@ -123,21 +99,6 @@ public class TriangleHex : MonoBehaviour
             transform.GetChild(i).GetComponent<MeshRenderer>().material = m;
         }
     }
-
-    public void SetMaterialByState(State state)
-    {
-        bool isWater = true;
-        for (int i = 0; i < state.rules.Length; i++)
-        {
-            transform.GetChild(i + 1).GetComponent<MeshRenderer>().material = ruleMaterialMap[state.rules[i]];
-            if (state.rules[i] == rule.ground)
-            {
-                isWater = false;
-            }
-        }
-        transform.GetChild(0).GetComponent<MeshRenderer>().material = isWater ? ruleMaterialMap[rule.water] : ruleMaterialMap[rule.ground];
-    }
-
     public void SetBackgroundMaterial(Material mat)
     {
         transform.GetChild(7).gameObject.GetComponent<MeshRenderer>().material = mat;
@@ -153,6 +114,67 @@ public class TriangleHex : MonoBehaviour
         neighbours[s] = nb;
     }
 
+    public void GenerateResources()
+    {
+        resources["food"] = 0.0f;
+        resources["wood"] = 0.0f;
+        resources["mud"] = 0.0f;
+        resources["stone"] = 0.0f;
+
+        switch (terrain)
+        {
+            case "Water":
+                resources["food"] = UnityEngine.Random.Range(1, 3);
+                resources["wood"] = UnityEngine.Random.Range(0, 1);
+                resources["mud"] = UnityEngine.Random.Range(1, 2);
+                resources["stone"] = UnityEngine.Random.Range(0, 1);
+                break;
+            case "Sand":
+                resources["food"] = 0.0f;
+                resources["wood"] = 0.0f;
+                resources["mud"] = UnityEngine.Random.Range(0, 1);
+                resources["stone"] = UnityEngine.Random.Range(0, 1);
+                break;
+            case "Meadow":
+                resources["food"] = UnityEngine.Random.Range(1, 3);
+                resources["wood"] = UnityEngine.Random.Range(0, 1);
+                resources["mud"] = 0.0f;
+                resources["stone"] = 0.0f;
+                break;
+            case "Forest":
+                resources["food"] = UnityEngine.Random.Range(0, 1);
+                resources["wood"] = UnityEngine.Random.Range(2, 4);
+                resources["mud"] = 0.0f;
+                resources["stone"] = 0.0f;
+                break;
+            case "Mountain":
+                resources["food"] = 0.0f;
+                resources["wood"] = 0.0f;
+                resources["mud"] = 0.0f;
+                resources["stone"] = UnityEngine.Random.Range(1, 3);
+                break;
+        }
+    }
+
+    /*
+    public void SetMaterialByState(State state)
+    {
+        bool isWater = true;
+        for (int i = 0; i < state.rules.Length; i++)
+        {
+            transform.GetChild(i + 1).GetComponent<MeshRenderer>().material = ruleMaterialMap[state.rules[i]];
+            if (state.rules[i] == rule.ground)
+            {
+                isWater = false;
+            }
+        }
+        transform.GetChild(0).GetComponent<MeshRenderer>().material = isWater ? ruleMaterialMap[rule.water] : ruleMaterialMap[rule.ground];
+    }
+    */
+
+
+
+    /*
     public void Collapse()
     {
         if (potentialStates.Count != 1)
@@ -190,4 +212,5 @@ public class TriangleHex : MonoBehaviour
             Collapse();
         }
     }
+    */
 }
