@@ -15,21 +15,52 @@ public class InfoPanel : MonoBehaviour
     private ResourcePanel stonePanel;
     [SerializeField]
     private TextMeshProUGUI textMesh;
+    [SerializeField]
+    private BuildButton buildButton;
+    [SerializeField]
+    private BuildingInfo buildingInfoPanel;
+    [SerializeField]
+    private RemoveBuildingButton removeButton;
+    private TriangleHex selected;
 
     public void Show(TriangleHex h)
     {
+        selected = null;
+        buildButton.transform.gameObject.SetActive(false);
+        buildingInfoPanel.transform.gameObject.SetActive(false);
+        removeButton.transform.gameObject.SetActive(false);
+
+        selected = h;
+
         textMesh.text = h.Terrain;
 
-        foodPanel.SetValue(h.Resources["food"]);
-        woodPanel.SetValue(h.Resources["wood"]);
-        mudPanel.SetValue(h.Resources["mud"]);
-        stonePanel.SetValue(h.Resources["stone"]);
+        float food = h.Resources["food"];
+        float wood = h.Resources["wood"];
+        float mud = h.Resources["mud"];
+        float stone = h.Resources["stone"];
+
+        if (h.Occupant != null)
+        {
+            buildingInfoPanel.SetValues(h.Occupant);
+            buildingInfoPanel.transform.gameObject.SetActive(true);
+            removeButton.transform.gameObject.SetActive(true);
+        }
+        else
+        {
+            buildButton.transform.gameObject.SetActive(true);
+        }
+
+        foodPanel.SetValue(food);
+        woodPanel.SetValue(wood);
+        mudPanel.SetValue(mud);
+        stonePanel.SetValue(stone);
 
         transform.gameObject.SetActive(true);
     }
 
     public void Hide()
     {
+        selected = null;
         transform.gameObject.SetActive(false);
     }
 }

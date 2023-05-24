@@ -15,7 +15,7 @@ public class TriangleHex : MonoBehaviour
     //private Dictionary<rule, Material> ruleMaterialMap;
     //private Dictionary<Material, rule> materialRuleMap;
     private float height;
-    private List<GameObject> occupants;
+    private Building occupant;
 
     public Vector2Int IndexCoordinates
     {
@@ -59,6 +59,24 @@ public class TriangleHex : MonoBehaviour
         set => resources = value;
     }
 
+    public Building Occupant
+    {
+        get => occupant;
+        set
+        {
+            if (value == null)
+            {
+                Destroy(occupant.gameObject);
+                occupant = null;
+            }
+            else
+            {
+                occupant = Instantiate(value, transform.localPosition, Quaternion.identity);
+                occupant.name = value.name;
+            }
+        }
+    }
+
     public void InitiateHex(Vector2Int iC, Material b, Material s, Material bG, Material g, Material w)
     {
         indexCoordinates = iC;
@@ -67,18 +85,7 @@ public class TriangleHex : MonoBehaviour
         selected = s;
         backGround = bG;
         resources = new Dictionary<string, float>();
-
-        /*
-        ruleMaterialMap = new Dictionary<rule, Material>();
-        ruleMaterialMap[rule.water] = w;
-        ruleMaterialMap[rule.ground] = g;
-
-        materialRuleMap = new Dictionary<Material, rule>();
-        materialRuleMap[w] = rule.water;
-        materialRuleMap[g] = rule.ground;
-
-        potentialStates = new HexStates();
-        */
+        occupant = null;
     }
 
     public void Clicked()
@@ -155,62 +162,4 @@ public class TriangleHex : MonoBehaviour
                 break;
         }
     }
-
-    /*
-    public void SetMaterialByState(State state)
-    {
-        bool isWater = true;
-        for (int i = 0; i < state.rules.Length; i++)
-        {
-            transform.GetChild(i + 1).GetComponent<MeshRenderer>().material = ruleMaterialMap[state.rules[i]];
-            if (state.rules[i] == rule.ground)
-            {
-                isWater = false;
-            }
-        }
-        transform.GetChild(0).GetComponent<MeshRenderer>().material = isWater ? ruleMaterialMap[rule.water] : ruleMaterialMap[rule.ground];
-    }
-    */
-
-
-
-    /*
-    public void Collapse()
-    {
-        if (potentialStates.Count != 1)
-        {
-            potentialStates.Collapse();
-        }
-        SetMaterialByState(potentialStates.States[0]);
-        foreach (KeyValuePair<side, TriangleHex> kvp in neighbours)
-        {
-            if (kvp.Value.PotentialStates.Count > 1)
-            {
-                int s = (int)kvp.Key;
-                if (s >= 3)
-                {
-                    s -= 3;
-                }
-                else
-                {
-                    s += 3;
-                }
-                s++;
-                Material m = transform.GetChild(s).GetComponent<MeshRenderer>().sharedMaterial;
-                Debug.Log("Material: " + m + ", rule: " + materialRuleMap[m] + " Sender: " + kvp.Key + " Reciever: " + (side)(s - 1) + " Sender coords: " + indexCoordinates);
-                kvp.Value.Reduce(kvp.Key, materialRuleMap[m]);
-            }
-        }
-    }
-
-    public void Reduce(side s, rule r)
-    {
-        potentialStates.Reduce(s, r);
-        Debug.Log("Side: " + s + " ,rule: " + r);
-        if (potentialStates.Count == 1)
-        {
-            Collapse();
-        }
-    }
-    */
 }

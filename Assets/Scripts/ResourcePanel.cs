@@ -1,12 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class ResourcePanel : MonoBehaviour
 {
     [SerializeField]
-    private TextMeshProUGUI textMesh;
+    protected TextMeshProUGUI textMesh;
 
     public void SetValue(float value)
     {

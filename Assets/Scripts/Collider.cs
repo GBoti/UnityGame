@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Collider : MonoBehaviour
 {
@@ -8,8 +9,11 @@ public class Collider : MonoBehaviour
     private TriangleHex th;
     private void OnMouseDown()
     {
-        GameObject.Find("HexLayout").GetComponent<HexGridLayout>().ManageSelected(
-            th
-        );
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            GameObject.Find("HexLayout").GetComponent<HexGridLayout>().ManageSelected(
+                th
+            );
+        }
     }
 }

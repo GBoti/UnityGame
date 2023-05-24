@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -41,6 +40,11 @@ public class HexGridLayout : MonoBehaviour
     private List<GameObject> backgroundHexes = new List<GameObject>();
     private TriangleHex currentSelected;
 
+    public TriangleHex CurrentSelected
+    {
+        get => currentSelected;
+    }
+
     public struct PathfindingNeighbour
     {
         public TriangleHex neighbouringHex;
@@ -54,11 +58,17 @@ public class HexGridLayout : MonoBehaviour
 
     private void OnEnable()
     {
+        DisplayBoard();
+    }
+
+    public void DisplayBoard()
+    {
         long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         LayoutGrid();
         Debug.Log("Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         Procedural_Map_Generate();
         Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
+        infoPanel.Hide();
     }
 
     public void LayoutGrid()
