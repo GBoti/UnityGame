@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CameraController : MonoBehaviour
 {
@@ -58,7 +59,7 @@ public class CameraController : MonoBehaviour
 
     void HandleMouseInput()
     {
-        if (Input.mouseScrollDelta.y != 0)
+        if (Input.mouseScrollDelta.y != 0 && !EventSystem.current.IsPointerOverGameObject())
         {
             fovNewZoom -= Input.mouseScrollDelta.y * fovZoomAmount;
             if (fovNewZoom < 2)

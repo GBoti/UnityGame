@@ -22,14 +22,14 @@ public class BuildingInfoPanel : MonoBehaviour
     private void Start()
     {
         nameText.text = building.name;
-        foodPanel.SetValue(building.food);
-        woodPanel.SetValue(building.wood);
-        mudPanel.SetValue(building.mud);
-        stonePanel.SetValue(building.stone);
-        foodCostPanel.SetValue(building.foodCost);
-        woodCostPanel.SetValue(building.woodCost);
-        mudCostPanel.SetValue(building.mudCost);
-        stoneCostPanel.SetValue(building.stoneCost);
+        foodPanel.SetValue(building.food, null);
+        woodPanel.SetValue(building.wood, null);
+        mudPanel.SetValue(building.mud, null);
+        stonePanel.SetValue(building.stone, null);
+        foodCostPanel.SetValue(building.foodCost, null);
+        woodCostPanel.SetValue(building.woodCost, null);
+        mudCostPanel.SetValue(building.mudCost, null);
+        stoneCostPanel.SetValue(building.stoneCost, null);
         descText.text = building.desc;
     }
 }

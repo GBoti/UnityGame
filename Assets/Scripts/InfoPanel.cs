@@ -50,10 +50,10 @@ public class InfoPanel : MonoBehaviour
             buildButton.transform.gameObject.SetActive(true);
         }
 
-        foodPanel.SetValue(food);
-        woodPanel.SetValue(wood);
-        mudPanel.SetValue(mud);
-        stonePanel.SetValue(stone);
+        foodPanel.SetValue(food, null);
+        woodPanel.SetValue(wood, null);
+        mudPanel.SetValue(mud, null);
+        stonePanel.SetValue(stone, null);
 
         transform.gameObject.SetActive(true);
     }

@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class Building : MonoBehaviour
 {
+    [Header("Name")]
+    public string buildingName;
     [Header("Production")]
     public float food;
     public float wood;

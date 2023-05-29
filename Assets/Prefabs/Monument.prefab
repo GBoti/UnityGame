@@ -111,6 +111,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d7ecd2f46838794d8c5e78c927aa281, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buildingName: Monument
   food: 0
   wood: 0
   mud: 0
@@ -120,4 +121,3 @@ MonoBehaviour:
   mudCost: 100
   stoneCost: 100
   desc: 
-  influenceRadius: 3

@@ -31,9 +31,14 @@ public class HexGridLayout : MonoBehaviour
 
     [Header("Info panel")]
     public InfoPanel infoPanel;
+    public GameObject buildingTypes;
 
     [Header("Hex base")]
     public GameObject hex;
+    [Header("Main building prefab")]
+    public Building mainBuilding;
+    public Colony colony;
+    public new CameraController camera;
 
     private readonly float sqrt3 = Mathf.Sqrt(3);
     private List<TriangleHex> hexes = new List<TriangleHex>();
@@ -56,11 +61,6 @@ public class HexGridLayout : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        DisplayBoard();
-    }
-
     public void DisplayBoard()
     {
         long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
@@ -69,6 +69,7 @@ public class HexGridLayout : MonoBehaviour
         Procedural_Map_Generate();
         Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         infoPanel.Hide();
+        buildingTypes.transform.gameObject.SetActive(false);
     }
 
     public void LayoutGrid()
@@ -238,8 +239,12 @@ public class HexGridLayout : MonoBehaviour
             }
             h.GenerateResources();
         }
-    }
 
+        List<TriangleHex> meadows = hexes.FindAll(h => h.Terrain == "Meadow");
+        int index = UnityEngine.Random.Range(0, meadows.Count - 1);
+        colony.AddBuilding(meadows[index], mainBuilding);
+        camera.cameraTransform.position = GetPositionForHexFromCoordinate(meadows[index].IndexCoordinates) + new Vector3(0, 40, 0);
+    }
     public List<TriangleHex> RecursiveFindPath(Vector2Int end, List<TriangleHex> path)
     {
         List<PathfindingNeighbour> neighbours = new List<PathfindingNeighbour>();
@@ -277,6 +282,7 @@ public class HexGridLayout : MonoBehaviour
     public void ManageSelected(TriangleHex clicked)
     {
         infoPanel.Hide();
+        buildingTypes.transform.gameObject.SetActive(false);
         if (currentSelected != null)
         {
             currentSelected.Declicked();

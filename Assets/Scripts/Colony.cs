@@ -20,7 +20,7 @@ public class Colony : MonoBehaviour
     public Dictionary<string, float> production;
     public Dictionary<string, float> storage;
 
-    private void Start()
+    public void InitColony()
     {
         structures = new List<Building>();
 

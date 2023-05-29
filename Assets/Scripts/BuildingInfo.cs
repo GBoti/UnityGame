@@ -16,10 +16,10 @@ public class BuildingInfo : MonoBehaviour
     public void SetValues(Building b)
     {
         nameText.text = b.name;
-        foodPanel.SetValue(b.food);
-        woodPanel.SetValue(b.wood);
-        mudPanel.SetValue(b.mud);
-        stonePanel.SetValue(b.stone);
+        foodPanel.SetValue(b.food, null);
+        woodPanel.SetValue(b.wood, null);
+        mudPanel.SetValue(b.mud, null);
+        stonePanel.SetValue(b.stone, null);
         descText.text = b.desc;
     }
 }
