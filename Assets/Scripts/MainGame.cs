@@ -10,6 +10,7 @@ public class MainGame : MonoBehaviour
     public Colony colony;
     public TextMeshProUGUI message;
     public CameraController cameraController;
+    private bool victory = false;
 
     private void Start()
     {
@@ -25,16 +26,20 @@ public class MainGame : MonoBehaviour
 
     private void Update()
     {
-        timePassed += Time.deltaTime;
-        if (timePassed > 1f)
+        if (!victory)
         {
-            colony.Produce();
-            timePassed = 0f;
-        }
-        if (colony.Structures.Find(s => s.buildingName == "Monument"))
-        {
-            message.text = "Victory";
-            message.gameObject.SetActive(true);
+            timePassed += Time.deltaTime;
+            if (timePassed > 1f)
+            {
+                colony.Produce();
+                timePassed = 0f;
+            }
+            if (colony.Structures.Find(s => s.buildingName == "Monument"))
+            {
+                message.text = "Victory";
+                message.gameObject.SetActive(true);
+                victory = true;
+            }
         }
     }
 }

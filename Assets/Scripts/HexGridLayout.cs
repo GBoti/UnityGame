@@ -243,7 +243,7 @@ public class HexGridLayout : MonoBehaviour
         List<TriangleHex> meadows = hexes.FindAll(h => h.Terrain == "Meadow");
         int index = UnityEngine.Random.Range(0, meadows.Count - 1);
         colony.AddBuilding(meadows[index], mainBuilding);
-        camera.cameraTransform.position = GetPositionForHexFromCoordinate(meadows[index].IndexCoordinates) + new Vector3(0, 40, 0);
+        camera.transform.position = GetPositionForHexFromCoordinate(meadows[index].IndexCoordinates);
     }
     public List<TriangleHex> RecursiveFindPath(Vector2Int end, List<TriangleHex> path)
     {
