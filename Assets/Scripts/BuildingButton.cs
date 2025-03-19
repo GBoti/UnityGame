@@ -9,6 +9,7 @@ public class BuildingButton : MonoBehaviour
     public HexGridLayout hexGrid;
     public GameObject buildingTypes;
     public Colony colony;
+
     void Start()
     {
         Button button = GetComponent<Button>();

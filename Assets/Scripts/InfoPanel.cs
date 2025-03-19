@@ -7,18 +7,25 @@ public class InfoPanel : MonoBehaviour
 {
     [SerializeField]
     private ResourcePanel foodPanel;
+
     [SerializeField]
     private ResourcePanel woodPanel;
+
     [SerializeField]
     private ResourcePanel mudPanel;
+
     [SerializeField]
     private ResourcePanel stonePanel;
+
     [SerializeField]
     private TextMeshProUGUI textMesh;
+
     [SerializeField]
     private BuildButton buildButton;
+
     [SerializeField]
     private BuildingInfo buildingInfoPanel;
+
     [SerializeField]
     private RemoveBuildingButton removeButton;
     private TriangleHex selected;

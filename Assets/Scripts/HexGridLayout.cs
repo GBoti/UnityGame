@@ -18,7 +18,6 @@ public class HexGridLayout : MonoBehaviour
     public float pathWeight;
 
     [Header("Materials")]
-
     public Material ground;
     public Material water;
     public Material backGround;
@@ -35,10 +34,14 @@ public class HexGridLayout : MonoBehaviour
 
     [Header("Hex base")]
     public GameObject hex;
+
     [Header("Main building prefab")]
     public Building mainBuilding;
     public Colony colony;
     public new CameraController camera;
+
+    [Header("Generator Object")]
+    public MapGenerator generator;
 
     private readonly float sqrt3 = Mathf.Sqrt(3);
     private List<TriangleHex> hexes = new List<TriangleHex>();
@@ -50,23 +53,22 @@ public class HexGridLayout : MonoBehaviour
         get => currentSelected;
     }
 
-    public struct PathfindingNeighbour
+    public MapGenerator Generator
     {
-        public TriangleHex neighbouringHex;
-        public float cost;
-        public PathfindingNeighbour(float f, TriangleHex h)
-        {
-            neighbouringHex = h;
-            cost = f;
-        }
+        get => generator;
+        set => generator = value;
     }
 
     public void DisplayBoard()
     {
         long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        generator.hexes = hexes;
         LayoutGrid();
-        Debug.Log("Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
-        Procedural_Map_Generate();
+        Debug.Log(
+            "Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms"
+        );
+        Generator.Procedural_Map_Generate();
+        Place_Colonies();
         Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         infoPanel.Hide();
         buildingTypes.transform.gameObject.SetActive(false);
@@ -81,7 +83,12 @@ public class HexGridLayout : MonoBehaviour
         {
             for (int x = 0; x < gridSize.x; x++)
             {
-                TriangleHex tile = Instantiate(hex, GetPositionForHexFromCoordinate(new Vector2Int(x, y)), transform.rotation).GetComponent<TriangleHex>();
+                TriangleHex tile = Instantiate(
+                        hex,
+                        GetPositionForHexFromCoordinate(new Vector2Int(x, y)),
+                        transform.rotation
+                    )
+                    .GetComponent<TriangleHex>();
                 tile.transform.SetParent(gameObject.transform);
                 tile.transform.localScale = new Vector3(size * 20, size * 12, size * 20);
                 tile.transform.localRotation *= Quaternion.Euler(0f, 0f, 0f);
@@ -157,126 +164,56 @@ public class HexGridLayout : MonoBehaviour
                 hexes.Add(tile);
             }
         }
+
+        GlobalConstants.mapTopEdge = GetPositionForHexFromCoordinate(hexes[0].IndexCoordinates).z;
+        GlobalConstants.mapLeftEdge = GetPositionForHexFromCoordinate(hexes[0].IndexCoordinates).x;
+        GlobalConstants.mapBottomEdge = GetPositionForHexFromCoordinate(
+            hexes[hexes.Count - 1].IndexCoordinates
+        ).z;
+        GlobalConstants.mapRightEdge = GetPositionForHexFromCoordinate(
+            hexes[hexes.Count - 1].IndexCoordinates
+        ).x;
+        Debug.Log(
+            "Hex list edges top, right, bottom, left: "
+                + hexes[0].IndexCoordinates.y
+                + " "
+                + hexes[0].IndexCoordinates.x
+                + " "
+                + hexes[hexes.Count - 1].IndexCoordinates.y
+                + " "
+                + hexes[hexes.Count - 1].IndexCoordinates.x
+                + "\n"
+                + "Map edges top, right, bottom, left: "
+                + GlobalConstants.mapTopEdge
+                + " "
+                + GlobalConstants.mapRightEdge
+                + " "
+                + GlobalConstants.mapBottomEdge
+                + " "
+                + GlobalConstants.mapLeftEdge
+                + "\n"
+                + "Hex size scale x, y: "
+                + hexes[0].transform.localScale.x
+                + " "
+                + hexes[0].transform.localScale.z
+                + "\n"
+        );
     }
 
-    //Procedural generation
-    //PerlinNoise -> height
-    //Pathfinder egyik oldalról másikra height alapján
-    //Utána height és szomszéd alapján -> hex material
-
-    public void Procedural_Map_Generate()
+    public void Place_Colonies()
     {
-        float perlinNoiseOffsetX = UnityEngine.Random.Range(0, 100);
-        float perlinNoiseOffsetY = UnityEngine.Random.Range(0, 100);
-        foreach (TriangleHex h in hexes)
-        {
-            Vector2 pos = h.IndexCoordinates;
-            float scaler = 0.15f;
-            h.Height = (int)(Mathf.PerlinNoise((pos.x + perlinNoiseOffsetX) * scaler, (pos.y + perlinNoiseOffsetY) * scaler) * 10);
-            //Debug.Log("Coords: " + pos.x + "," + pos.y + ", height: " + h.Height);
-        }
-        Vector2Int startPos;
-        Vector2Int endPos;
-        if (UnityEngine.Random.Range(0, 100) % 2 == 0)
-        {
-            int riverPos = UnityEngine.Random.Range(0, gridSize.y - 1);
-            startPos = new Vector2Int(0, riverPos);
-            endPos = new Vector2Int(gridSize.x - 1, gridSize.y - 1 - riverPos);
-        }
-        else
-        {
-            int riverPos = UnityEngine.Random.Range(0, gridSize.x);
-            startPos = new Vector2Int(riverPos, 0);
-            endPos = new Vector2Int(gridSize.x - 1 - riverPos, gridSize.y - 1);
-        }
-
-        List<TriangleHex> path = RecursiveFindPath(endPos, new List<TriangleHex> { hexes.Find(h => h.IndexCoordinates == startPos) });
-
-        foreach (TriangleHex h in path)
-        {
-            h.Height = -1;
-            foreach (TriangleHex n in h.Neighbours.Values)
-            {
-                if (n.Height != -1 && n.Height < 7)
-                {
-                    n.Height = -0.5f;
-                }
-                if (n.Height >= 9)
-                {
-                    n.Height = 8;
-                }
-            }
-        }
-
-        foreach (TriangleHex h in hexes)
-        {
-            switch (h.Height)
-            {
-                case -1:
-                    h.SetMaterial(water);
-                    h.Terrain = "Water";
-                    break;
-                case -0.5f:
-                    h.SetMaterial(sand);
-                    h.Terrain = "Sand";
-                    break;
-                case < 3:
-                    h.SetMaterial(ground);
-                    h.Terrain = "Meadow";
-                    break;
-                case < 7:
-                    h.SetMaterial(forest);
-                    h.Terrain = "Forest";
-                    break;
-                case < 9:
-                    h.SetMaterial(mountain);
-                    h.Terrain = "Mountain";
-                    break;
-                default:
-                    h.SetMaterial(mountainPeak);
-                    h.Terrain = "Snowy Peak";
-                    break;
-            }
-            h.GenerateResources();
-        }
-
         List<TriangleHex> meadows = hexes.FindAll(h => h.Terrain == "Meadow");
+        if (meadows.Count < 1)
+        {
+            Debug.Log("There are no meadows generated.");
+            return;
+        }
+
         int index = UnityEngine.Random.Range(0, meadows.Count - 1);
         colony.AddBuilding(meadows[index], mainBuilding);
-        camera.transform.position = GetPositionForHexFromCoordinate(meadows[index].IndexCoordinates);
-    }
-    public List<TriangleHex> RecursiveFindPath(Vector2Int end, List<TriangleHex> path)
-    {
-        List<PathfindingNeighbour> neighbours = new List<PathfindingNeighbour>();
-
-        foreach (TriangleHex n in path[path.Count - 1].Neighbours.Values)
-        {
-            if (n.IndexCoordinates == end)
-            {
-                path.Add(n);
-                return path;
-            }
-            if (path.Contains(n))
-            {
-                continue;
-            }
-            float currentValue = ((n.Height - path[path.Count - 1].Height) * heightWeight) + (Mathf.Sqrt(Mathf.Pow((end - n.IndexCoordinates).x, 2) + Mathf.Pow((end - n.IndexCoordinates).y, 2)) * pathWeight);
-            neighbours.Add(new PathfindingNeighbour(currentValue, n));
-        }
-
-        neighbours = neighbours.OrderBy(n => n.cost).ToList();
-
-        foreach (PathfindingNeighbour p in neighbours)
-        {
-            path.Add(p.neighbouringHex);
-            List<TriangleHex> currentPath = RecursiveFindPath(end, path);
-            if (currentPath != null)
-            {
-                return currentPath;
-            }
-            path.RemoveAt(path.Count - 1);
-        }
-        return null;
+        camera.transform.position = GetPositionForHexFromCoordinate(
+            meadows[index].IndexCoordinates
+        );
     }
 
     public void ManageSelected(TriangleHex clicked)

@@ -17,12 +17,16 @@ public class ResourcePanel : MonoBehaviour
         {
             if (production >= 0)
             {
-                textMesh.text = Mathf.Round(value).ToString() + " +" + Mathf.Round((float)production).ToString();
+                textMesh.text =
+                    Mathf.Round(value).ToString()
+                    + " +"
+                    + Mathf.Round((float)production).ToString();
                 textMesh.color = Color.white;
             }
             else
             {
-                textMesh.text = Mathf.Round(value).ToString() + Mathf.Round((float)production).ToString();
+                textMesh.text =
+                    Mathf.Round(value).ToString() + Mathf.Round((float)production).ToString();
                 textMesh.color = Color.red;
             }
         }

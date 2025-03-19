@@ -11,11 +11,10 @@ public class TriangleHex : MonoBehaviour
     private Material backGround;
     private string terrain;
     private Dictionary<string, float> resources;
-    //private HexStates potentialStates;
-    //private Dictionary<rule, Material> ruleMaterialMap;
-    //private Dictionary<Material, rule> materialRuleMap;
+
     private float height;
     private Building occupant;
+    private Vector3 previousLocalScale;
 
     public Vector2Int IndexCoordinates
     {
@@ -34,13 +33,6 @@ public class TriangleHex : MonoBehaviour
         set => basic = value;
         get => basic;
     }
-
-    /*
-    public HexStates PotentialStates
-    {
-        get => potentialStates;
-    }
-    */
 
     public float Height
     {
@@ -72,12 +64,20 @@ public class TriangleHex : MonoBehaviour
             else
             {
                 occupant = Instantiate(value, transform.localPosition, Quaternion.identity);
+                occupant.transform.localScale += new Vector3(0, height, 0);
                 occupant.name = value.name;
             }
         }
     }
 
-    public void InitiateHex(Vector2Int iC, Material b, Material s, Material bG, Material g, Material w)
+    public void InitiateHex(
+        Vector2Int iC,
+        Material b,
+        Material s,
+        Material bG,
+        Material g,
+        Material w
+    )
     {
         indexCoordinates = iC;
         neighbours = new Dictionary<side, TriangleHex>();
@@ -86,11 +86,15 @@ public class TriangleHex : MonoBehaviour
         backGround = bG;
         resources = new Dictionary<string, float>();
         occupant = null;
+        previousLocalScale = transform.localScale;
     }
 
     public void Clicked()
     {
         SetBackgroundMaterial(selected);
+        Debug.Log(
+            "Clicked hex coords: (" + transform.position.x + ", " + transform.position.z + ")\n"
+        );
     }
 
     public void Declicked()
@@ -106,6 +110,13 @@ public class TriangleHex : MonoBehaviour
             transform.GetChild(i).GetComponent<MeshRenderer>().material = m;
         }
     }
+
+    public void SetHeight(float h)
+    {
+        transform.localScale = previousLocalScale;
+        transform.localScale += new Vector3(0, h * 100, 0);
+    }
+
     public void SetBackgroundMaterial(Material mat)
     {
         transform.GetChild(7).gameObject.GetComponent<MeshRenderer>().material = mat;

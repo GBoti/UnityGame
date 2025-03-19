@@ -7,6 +7,7 @@ public class BuildingInfoPanel : MonoBehaviour
 {
     [Header("Information")]
     public Building building;
+
     [Header("Components")]
     public TextMeshProUGUI nameText;
     public ResourcePanel foodPanel;

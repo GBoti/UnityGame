@@ -5,12 +5,14 @@ using UnityEngine;
 public class Colony : MonoBehaviour
 {
     private List<Building> structures;
+
     //private List<TriangleHex> territory;
     public List<Building> Structures
     {
         get => structures;
         set => structures = value;
     }
+
     /*public List<TriangleHex> Territory
     {
         get => territory;
@@ -77,8 +79,13 @@ public class Colony : MonoBehaviour
         production["wood"] -= h.Occupant.wood;
         production["mud"] -= h.Occupant.mud;
         production["stone"] -= h.Occupant.stone;
-        h.Occupant = null;
 
+        // TODO: removal cost return needs tweaking
+        storage["food"] += h.Occupant.foodCost;
+        storage["wood"] += h.Occupant.woodCost;
+        storage["mud"] += h.Occupant.mudCost;
+        storage["stone"] += h.Occupant.stoneCost;
+        h.Occupant = null;
     }
 
     public void Produce()

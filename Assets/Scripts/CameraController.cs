@@ -15,10 +15,12 @@ public class CameraController : MonoBehaviour
     public float movementTime;
     public float rotationAmount;
     public float fovZoomAmount;
+
     //public Vector3 zoomAmount;
 
     public Vector3 newPosition;
     public Quaternion newRotation;
+
     //public Vector3 newZoom;
     public float fovNewZoom;
 
@@ -127,6 +129,7 @@ public class CameraController : MonoBehaviour
         {
             movementSpeed = normalSpeed;
         }
+
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
             newPosition += (transform.forward * movementSpeed);
@@ -144,6 +147,28 @@ public class CameraController : MonoBehaviour
             newPosition += (transform.right * movementSpeed);
         }
 
+        if (Input.GetKey(KeyCode.P))
+        {
+            Debug.Log("Camera is at: " + newPosition + "\n");
+        }
+
+        if (newPosition.x > GlobalConstants.mapRightEdge)
+        {
+            newPosition.x = GlobalConstants.mapRightEdge;
+        }
+        if (newPosition.z < GlobalConstants.mapBottomEdge)
+        {
+            newPosition.z = GlobalConstants.mapBottomEdge;
+        }
+        if (newPosition.x < GlobalConstants.mapLeftEdge)
+        {
+            newPosition.x = GlobalConstants.mapLeftEdge;
+        }
+        if (newPosition.z > GlobalConstants.mapTopEdge)
+        {
+            newPosition.z = GlobalConstants.mapTopEdge;
+        }
+
         if (Input.GetKey(KeyCode.Q))
         {
             newRotation *= Quaternion.Euler(Vector3.up * rotationAmount);
@@ -153,8 +178,16 @@ public class CameraController : MonoBehaviour
             newRotation *= Quaternion.Euler(Vector3.up * -rotationAmount);
         }
 
-        transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime * movementTime);
-        transform.rotation = Quaternion.Lerp(transform.rotation, newRotation, Time.deltaTime * movementTime);
+        transform.position = Vector3.Lerp(
+            transform.position,
+            newPosition,
+            Time.deltaTime * movementTime
+        );
+        transform.rotation = Quaternion.Lerp(
+            transform.rotation,
+            newRotation,
+            Time.deltaTime * movementTime
+        );
         cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = fovNewZoom;
     }
 }

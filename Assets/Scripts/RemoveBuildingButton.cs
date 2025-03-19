@@ -5,6 +5,7 @@ public class RemoveBuildingButton : MonoBehaviour
 {
     public HexGridLayout hexGrid;
     public Colony colony;
+
     void Start()
     {
         Button button = GetComponent<Button>();
