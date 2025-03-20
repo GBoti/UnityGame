@@ -2043,6 +2043,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heightWeight: 0.9
   pathWeight: 1
+  gridSize: 50
 --- !u!224 &808827014 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5046958355865130434, guid: 57d15889f29c54c4bb28731cb53a0bde, type: 3}
@@ -5301,6 +5302,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heightWeight: 0.9
   pathWeight: 1
+  gridSize: 50
 --- !u!1001 &1868639261
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5874,6 +5876,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heightWeight: 0.9
   pathWeight: 1
+  gridSize: 50
 --- !u!1001 &1977946656
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6581,6 +6584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heightWeight: 0.9
   pathWeight: 1
+  gridSize: 50
 --- !u!1 &2057232901
 GameObject:
   m_ObjectHideFlags: 0

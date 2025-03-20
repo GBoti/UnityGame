@@ -5,12 +5,6 @@ using UnityEngine;
 
 public class MountainRange : AbstractGenerator
 {
-    public MountainRange(float hw, float pw)
-    {
-        heightWeight = -hw;
-        pathWeight = pw;
-    }
-
     override public void Generate(List<TriangleHex> hexes, Vector2Int gridSize)
     {
         TriangleHex startPos;

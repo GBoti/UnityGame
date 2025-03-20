@@ -5,12 +5,6 @@ using UnityEngine;
 
 public class AStarRiver : AbstractGenerator
 {
-    public AStarRiver(float hw, float pw)
-    {
-        heightWeight = hw;
-        pathWeight = pw;
-    }
-
     override public void Generate(List<TriangleHex> hexes, Vector2Int gridSize)
     {
         Vector2Int startPos;

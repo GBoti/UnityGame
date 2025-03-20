@@ -7,6 +7,7 @@ public abstract class AbstractGenerator : MonoBehaviour, IGeneratorInterface
 {
     public float heightWeight;
     public float pathWeight;
+    public float gridSize;
 
     public abstract void Generate(List<TriangleHex> hexes, Vector2Int gridSize);
 
@@ -22,8 +23,14 @@ public abstract class AbstractGenerator : MonoBehaviour, IGeneratorInterface
         }
     }
 
+    //Esetleg másik útkeresés, hogy gyorsabb legyen(folyó, hegylánc)
     public List<TriangleHex> RecursiveFindPath(Vector2Int end, List<TriangleHex> path)
     {
+        if (path.Count > gridSize * 4)
+        {
+            return path;
+        }
+
         List<PathfindingNeighbour> neighbours = new List<PathfindingNeighbour>();
 
         foreach (TriangleHex n in path[path.Count - 1].Neighbours.Values)

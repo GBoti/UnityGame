@@ -5,12 +5,6 @@ using UnityEngine;
 
 public class Lake : AbstractGenerator
 {
-    public Lake(float hw, float pw)
-    {
-        heightWeight = hw;
-        pathWeight = pw;
-    }
-
     override public void Generate(List<TriangleHex> hexes, Vector2Int gridSize)
     {
         int lakeBaseX = UnityEngine.Random.Range(0, gridSize.x - 1);

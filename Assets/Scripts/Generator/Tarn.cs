@@ -5,12 +5,6 @@ using UnityEngine;
 
 public class Tarn : AbstractGenerator
 {
-    public Tarn(float hw, float pw)
-    {
-        heightWeight = hw;
-        pathWeight = pw;
-    }
-
     override public void Generate(List<TriangleHex> hexes, Vector2Int gridSize)
     {
         int tarnBaseX = UnityEngine.Random.Range(0, gridSize.x - 1);
@@ -37,7 +31,10 @@ public class Tarn : AbstractGenerator
 
         foreach (TriangleHex t in tarn)
         {
-            t.Height = -1.0f;
+            if (t.Height != 0.1f)
+            {
+                t.Height = -1.0f;
+            }
             foreach (TriangleHex n in t.Neighbours.Values)
             {
                 if (n.Height != -1.0f && n.Height != 0.1f)
