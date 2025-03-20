@@ -34,7 +34,6 @@ public class MapGenerator : MonoBehaviour
     public Material mountainPeak;
 
     [Header("Generator parameters")]
-    //Ebbe mennek bele az editorból a generálandó osztályok
     [SerializeField]
     NewDict featuresDict;
 
@@ -63,10 +62,9 @@ public class MapGenerator : MonoBehaviour
                     (pos.y + perlinNoiseOffsetY) * scaler
                 ) * 10
             );
-            //Debug.Log("Coords: " + pos.x + "," + pos.y + ", height: " + h.Height);
         }
+
         features = featuresDict.ToDictionary();
-        //Általános formáció generáló függvény amit fel lehet paraméterezni folyónak, hegynek stb.-nek (tó)
         foreach (AbstractGenerator f in features.Keys)
         {
             for (int i = 0; i < features[f]; i++)
