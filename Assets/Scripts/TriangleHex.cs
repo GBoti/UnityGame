@@ -92,9 +92,7 @@ public class TriangleHex : MonoBehaviour
     public void Clicked()
     {
         SetBackgroundMaterial(selected);
-        Debug.Log(
-            "Clicked hex coords: (" + transform.position.x + ", " + transform.position.z + ")\n"
-        );
+        //Debug.Log("Clicked hex coords: (" + transform.position.x + ", " + transform.position.z + ")\n");
     }
 
     public void Declicked()

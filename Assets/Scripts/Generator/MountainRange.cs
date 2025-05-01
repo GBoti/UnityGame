@@ -25,10 +25,17 @@ public class MountainRange : AbstractGenerator
         startPos = mountains[index];
         endPos = mountains[mountains.Count - index];
 
+        List<TriangleHex> ridge = GreedyFindPath(
+            hexes.Find(h => h.IndexCoordinates == startPos.IndexCoordinates),
+            hexes.Find(h => h.IndexCoordinates == endPos.IndexCoordinates)
+        );
+        
+        /*
         List<TriangleHex> ridge = RecursiveFindPath(
             endPos.IndexCoordinates,
             new List<TriangleHex> { startPos }
         );
+        */
 
         foreach (TriangleHex r in ridge)
         {

@@ -14,6 +14,7 @@ public class RegenerateMapButton : MonoBehaviour
         button.onClick.AddListener(() =>
         {
             hglayout.Generator.scaler = scalerInput;
+            hglayout.LayoutGrid();
             hglayout.Generator.Procedural_Map_Generate();
         });
     }

@@ -2660,7 +2660,7 @@ MonoBehaviour:
     - feature: {fileID: 2050968033}
       generationNumber: 1
     - feature: {fileID: 1815725895}
-      generationNumber: 2
+      generationNumber: 1
   heightWeight: 0.9
   pathWeight: 1
 --- !u!1001 &1000004831

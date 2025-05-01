@@ -23,7 +23,6 @@ public abstract class AbstractGenerator : MonoBehaviour, IGeneratorInterface
         }
     }
 
-    //Esetleg másik útkeresés, hogy gyorsabb legyen(folyó, hegylánc)
     public List<TriangleHex> RecursiveFindPath(Vector2Int end, List<TriangleHex> path)
     {
         if (path.Count > gridSize * 4)
@@ -70,6 +69,53 @@ public abstract class AbstractGenerator : MonoBehaviour, IGeneratorInterface
         return null;
     }
 
+    public List<TriangleHex> GreedyFindPath(TriangleHex start, TriangleHex end)
+    {
+        List<TriangleHex> path = new List<TriangleHex> { start };
+        TriangleHex current = start;
+
+        while (current != end)
+        {
+            TriangleHex best = start;
+            float bestDist = 0;
+
+            foreach (TriangleHex n in current.Neighbours.Values)
+            {
+                if (path.Contains(n))
+                {
+                    continue;
+                }
+                if (bestDist == 0)
+                {
+                    best = n;
+                    bestDist =
+                        (n.Height - current.Height) * heightWeight
+                        + MathF.Sqrt(
+                            MathF.Pow((end.IndexCoordinates - n.IndexCoordinates).x, 2)
+                                + MathF.Pow((end.IndexCoordinates - n.IndexCoordinates).y, 2)
+                        ) * pathWeight;
+                }
+                else
+                {
+                    float dist =
+                        (n.Height - current.Height) * heightWeight
+                        + MathF.Sqrt(
+                            MathF.Pow((end.IndexCoordinates - n.IndexCoordinates).x, 2)
+                                + MathF.Pow((end.IndexCoordinates - n.IndexCoordinates).y, 2)
+                        ) * pathWeight;
+                    if (dist < bestDist)
+                    {
+                        best = n;
+                        bestDist = dist;
+                    }
+                }
+            }
+            current = best;
+            path.Add(best);
+        }
+        return path;
+    }
+
     public float GetDistanceBetweenHexes(TriangleHex start, TriangleHex end)
     {
         TriangleHex current = start;
@@ -77,7 +123,8 @@ public abstract class AbstractGenerator : MonoBehaviour, IGeneratorInterface
 
         while (current != end)
         {
-            TriangleHex closest = new TriangleHex();
+            TriangleHex closest = start;
+            //TriangleHex closest = new TriangleHex();
             float leastDist = -1;
             foreach (TriangleHex n in current.Neighbours.Values)
             {

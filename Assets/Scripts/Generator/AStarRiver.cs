@@ -22,11 +22,17 @@ public class AStarRiver : AbstractGenerator
             endPos = new Vector2Int(gridSize.x - 1 - riverPos, gridSize.y - 1);
         }
 
+        List<TriangleHex> path = GreedyFindPath(
+            hexes.Find(h => h.IndexCoordinates == startPos),
+            hexes.Find(h => h.IndexCoordinates == endPos)
+        );
+
+        /*
         List<TriangleHex> path = RecursiveFindPath(
             endPos,
             new List<TriangleHex> { hexes.Find(h => h.IndexCoordinates == startPos) }
         );
-
+        */
         foreach (TriangleHex h in path)
         {
             h.Height = 0.1f;

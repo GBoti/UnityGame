@@ -64,12 +64,10 @@ public class HexGridLayout : MonoBehaviour
         long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         generator.hexes = hexes;
         LayoutGrid();
-        Debug.Log(
-            "Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms"
-        );
+        //Debug.Log("Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         Generator.Procedural_Map_Generate();
         Place_Colonies();
-        Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
+        //Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
         infoPanel.Hide();
         buildingTypes.transform.gameObject.SetActive(false);
     }
@@ -77,7 +75,7 @@ public class HexGridLayout : MonoBehaviour
     public void LayoutGrid()
     {
         DestroyGrid();
-        Debug.Log($"Displaying grid {gridSize.x}, {gridSize.y}");
+        //Debug.Log($"Displaying grid {gridSize.x}, {gridSize.y}");
 
         for (int y = 0; y < gridSize.y; y++)
         {
@@ -173,6 +171,7 @@ public class HexGridLayout : MonoBehaviour
         GlobalConstants.mapRightEdge = GetPositionForHexFromCoordinate(
             hexes[hexes.Count - 1].IndexCoordinates
         ).x;
+        /*
         Debug.Log(
             "Hex list edges top, right, bottom, left: "
                 + hexes[0].IndexCoordinates.y
@@ -198,6 +197,7 @@ public class HexGridLayout : MonoBehaviour
                 + hexes[0].transform.localScale.z
                 + "\n"
         );
+        */
     }
 
     public void Place_Colonies()
@@ -205,7 +205,7 @@ public class HexGridLayout : MonoBehaviour
         List<TriangleHex> meadows = hexes.FindAll(h => h.Terrain == "Meadow");
         if (meadows.Count < 1)
         {
-            Debug.Log("There are no meadows generated.");
+            //Debug.Log("There are no meadows generated.");
             return;
         }
 
@@ -238,7 +238,7 @@ public class HexGridLayout : MonoBehaviour
 
     public void DestroyGrid()
     {
-        Debug.Log("Destroying grid...");
+        //Debug.Log("Destroying grid...");
 
         foreach (TriangleHex child in hexes)
         {
