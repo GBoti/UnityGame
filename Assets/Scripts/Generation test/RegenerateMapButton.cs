@@ -1,31 +1,35 @@
 using UnityEngine;
 using UnityEngine.UI;
+using DishevelledBadger.FlashFrostVale.Server;
 
-public class RegenerateMapButton : MonoBehaviour
+namespace DishevelledBadger.FlashFrostVale.test
 {
-    [SerializeField]
-    private HexGridLayout hglayout;
-
-    public float scalerInput = 0.2f;
-
-    void Start()
+    public class RegenerateMapButton : MonoBehaviour
     {
-        Button button = GetComponent<Button>();
-        button.onClick.AddListener(() =>
-        {
-            hglayout.Generator.scaler = scalerInput;
-            hglayout.LayoutGrid();
-            hglayout.Generator.Procedural_Map_Generate();
-        });
-    }
+        [SerializeField]
+        private HexGridLayout hglayout;
 
-    void Update() { }
+        public float scalerInput = 0.2f;
 
-    public void getScalerInput(string input)
-    {
-        if (input != null)
+        void Start()
         {
-            scalerInput = float.Parse(input);
+            Button button = GetComponent<Button>();
+            button.onClick.AddListener(() =>
+            {
+                hglayout.Generator.scaler = scalerInput;
+                hglayout.LayoutGrid();
+                hglayout.Generator.Procedural_Map_Generate();
+            });
+        }
+
+        void Update() { }
+
+        public void getScalerInput(string input)
+        {
+            if (input != null)
+            {
+                scalerInput = float.Parse(input);
+            }
         }
     }
 }
