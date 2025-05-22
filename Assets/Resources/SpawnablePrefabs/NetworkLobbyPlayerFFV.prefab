@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5072923802271021227}
   - component: {fileID: 1696475977317495133}
-  - component: {fileID: 5638893236493340486}
+  - component: {fileID: -7034716321526946605}
   m_Layer: 0
   m_Name: NetworkLobbyPlayerFFV
   m_TagString: Untagged
@@ -50,7 +50,7 @@ MonoBehaviour:
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
---- !u!114 &5638893236493340486
+--- !u!114 &-7034716321526946605
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -62,9 +62,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acf33bbf01071474485d57e35ebe265b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 1
-  syncMode: 1
+  syncDirection: 0
+  syncMode: 0
   syncInterval: 0
-  startGameButton: {fileID: 0}
   DisplayName: Loading...
   IsReady: 0
+  _isLeader: 0
