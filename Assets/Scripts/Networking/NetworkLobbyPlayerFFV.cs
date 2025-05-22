@@ -18,7 +18,7 @@ namespace DishevelledBadger.FlashFrostVale.Networking
     {
         // Player's display name. Synchronized from server to clients. Hook updates UI.
         // Prefab default for this field MUST be "Loading..." for hooks to fire correctly on initial sync.
-        [SerializeField] // Shown in Inspector for debugging, but primarily managed by code.
+        [SerializeField]
         [SyncVar(hook = nameof(OnPlayerNameChangedHook))]
         public string DisplayName = "Loading...";
 

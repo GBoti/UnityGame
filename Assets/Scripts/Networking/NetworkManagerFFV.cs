@@ -1,11 +1,9 @@
 using UnityEngine;
-using Mirror; // Mirror networking library.
-using System; // For Action event type.
-using System.Linq; // For LINQ operations like Any().
-using System.Collections.Generic; // For Lists.
-using DishevelledBadger.FlashFrostVale.Globals; // Access to DebugManager.
-
-// Needs reading through
+using Mirror;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using DishevelledBadger.FlashFrostVale.Globals; // Namespace for project wide helpers like DebugManager.
 
 // Namespace for network-related classes.
 namespace DishevelledBadger.FlashFrostVale.Networking
@@ -68,7 +66,7 @@ namespace DishevelledBadger.FlashFrostVale.Networking
             GameObject[] prefabsToRegister = Resources.LoadAll<GameObject>("SpawnablePrefabs");
             foreach (GameObject prefab in prefabsToRegister)
             {
-                Mirror.ClientScene.RegisterPrefab(prefab); // Register with Mirror's client scene.
+                NetworkClient.RegisterPrefab(prefab);
             }
             if (DebugManager.DebugModeEnabled)
                 Debug.Log("NetworkManagerFFV: Client started.");
