@@ -36,6 +36,8 @@ namespace DishevelledBadger.FlashFrostVale.Server.Generator
                                 (pos.x + perlinNoiseOffsetX) * scaler,
                                 (pos.y + perlinNoiseOffsetY) * scaler
                             ) * 10f; // Multiplier to scale noise output to desired height range.
+                if (h.Height < 0) h.Height = 0f;
+                if (h.Height > 10) h.Height = 10f;
             }
 
             // 2. Apply specific map features (mountains, rivers, etc.) over the base terrain.

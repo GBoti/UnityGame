@@ -2303,7 +2303,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ef076470ba4b1947a6701ed626c2e8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkManagerFFV: {fileID: 0}
   playerEntryPrefab: {fileID: 4567130334852733742, guid: 8b1a6390eba0f094bb217b55ce62b5d4, type: 3}
   playerListParent: {fileID: 7359984353899207347}
   readyButton: {fileID: 8233888568801213088}
@@ -3483,3 +3482,4 @@ MonoBehaviour:
   landingPagePanel: {fileID: 1709899685364973113}
   ipAddressInputField: {fileID: 8898875739161432909}
   joinButton: {fileID: 5392361378438873907}
+  playerNameInput: {fileID: 0}

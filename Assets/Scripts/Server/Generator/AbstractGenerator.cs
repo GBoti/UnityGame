@@ -86,14 +86,12 @@ namespace DishevelledBadger.FlashFrostVale.Server.Generator
             TriangleHex current = start;
 
             int safetyBreak = 0; // Prevent infinite loops if end is unreachable.
-            int maxIterations = (int)(this.gridSize * this.gridSize * 2); // Generous limit.
+            int maxIterations = (int)(this.gridSize * this.gridSize * 4); // Generous limit.
 
             while (current != end && safetyBreak < maxIterations)
             {
                 TriangleHex bestNextHex = start;
                 float bestCost = float.MaxValue; // Initialize with a very high cost.
-
-                if (current.Neighbours == null || current.Neighbours.Count == 0) return path; // No way out
 
                 foreach (TriangleHex n in current.Neighbours.Values)
                 {
