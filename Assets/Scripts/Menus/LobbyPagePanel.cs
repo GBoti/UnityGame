@@ -1,11 +1,11 @@
 using UnityEngine;
+using System;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using DishevelledBadger.FlashFrostVale.Globals; // Namespace for project wide helpers like DebugManager.
-using DishevelledBadger.FlashFrostVale.Networking; // Access to network player and manager.
+using DishevelledBadger.FlashFrostVale.Globals;
+using DishevelledBadger.FlashFrostVale.Networking;
 
-// Namespace for menu-related scripts.
 namespace DishevelledBadger.FlashFrostVale.Menus
 {
     /// <summary>
@@ -28,7 +28,7 @@ namespace DishevelledBadger.FlashFrostVale.Menus
         // Stores instantiated UI GameObjects, keyed by their corresponding NetworkLobbyPlayerFFV instance.
         private readonly Dictionary<NetworkLobbyPlayerFFV, GameObject> _playerUiEntries = new Dictionary<NetworkLobbyPlayerFFV, GameObject>();
         // Stores event handlers for each player's OnPlayerDataUpdated event to allow proper unsubscription.
-        private readonly Dictionary<NetworkLobbyPlayerFFV, System.Action> _playerEventHandlers = new Dictionary<NetworkLobbyPlayerFFV, System.Action>();
+        private readonly Dictionary<NetworkLobbyPlayerFFV, Action> _playerEventHandlers = new Dictionary<NetworkLobbyPlayerFFV, System.Action>();
         // Cached reference to the local player's NetworkLobbyPlayerFFV instance.
         private NetworkLobbyPlayerFFV _localLobbyPlayerInstance;
 
@@ -40,7 +40,7 @@ namespace DishevelledBadger.FlashFrostVale.Menus
         {
             if (DebugManager.DebugModeEnabled) Debug.Log("LobbyPagePanel: OnEnable called.");
             // Subscribe to the event that fires when the client-side list of players changes.
-            NetworkManagerFFV.OnClientSidePlayerListChanged += HandlePlayerListChanged;
+            NetworkManagerFFV.OnClientSideLobbyPlayerListChanged += HandlePlayerListChanged;
             // Perform an initial refresh of the player list UI.
             RefreshPlayerListUI();
         }
@@ -52,7 +52,7 @@ namespace DishevelledBadger.FlashFrostVale.Menus
         private void OnDisable()
         {
             if (DebugManager.DebugModeEnabled) Debug.Log("LobbyPagePanel: OnDisable called.");
-            NetworkManagerFFV.OnClientSidePlayerListChanged -= HandlePlayerListChanged;
+            NetworkManagerFFV.OnClientSideLobbyPlayerListChanged -= HandlePlayerListChanged;
             // Clear all UI entries and unsubscribe from individual player events.
             ClearAllPlayerEntriesAndUnsubscribe();
         }

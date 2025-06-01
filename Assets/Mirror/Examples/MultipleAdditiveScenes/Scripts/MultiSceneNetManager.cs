@@ -35,7 +35,7 @@ namespace Mirror.Examples.MultipleAdditiveScenes
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+        public override void OnServerAddLobbyPlayer(NetworkConnectionToClient conn)
         {
             StartCoroutine(OnServerAddPlayerDelayed(conn));
         }

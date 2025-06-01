@@ -4,9 +4,13 @@ using DishevelledBadger.FlashFrostVale.Server;
 
 namespace DishevelledBadger.FlashFrostVale.Player
 {
+    // This class did the logic for removing a building form a tile
+    // Right now it does nothing
+    // In the multiplayer context it will send a [Command] to the server
+    // to remove the building from this players colony
     public class RemoveBuildingButton : MonoBehaviour
     {
-        public HexGridLayout hexGrid; // this needs change, the building removal should be requested by the player and then executed by the server
+        public HexGridLayout hexGrid;
         public Colony colony;
 
         void Start()
@@ -14,8 +18,7 @@ namespace DishevelledBadger.FlashFrostVale.Player
             Button button = GetComponent<Button>();
             button.onClick.AddListener(() =>
             {
-                colony.RemoveBuilding(hexGrid.CurrentSelected);
-                hexGrid.infoPanel.Show(hexGrid.CurrentSelected);
+
             });
         }
     }

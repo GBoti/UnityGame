@@ -1,8 +1,7 @@
 using UnityEngine;
-using DishevelledBadger.FlashFrostVale.Networking; // Namespace for the custom NetworkManager.
-using DishevelledBadger.FlashFrostVale.Globals; // Namespace for project wide helpers like DebugManager.
+using DishevelledBadger.FlashFrostVale.Networking;
+using DishevelledBadger.FlashFrostVale.Globals;
 
-// Namespace for menu-related scripts.
 namespace DishevelledBadger.FlashFrostVale.Menus
 {
     /// <summary>

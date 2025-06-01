@@ -1,8 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using DishevelledBadger.FlashFrostVale.Networking; // Namespace for network-related classes.
-using DishevelledBadger.FlashFrostVale.Globals; // Namespace for project wide helpers like DebugManager.
+using DishevelledBadger.FlashFrostVale.Networking;
+using DishevelledBadger.FlashFrostVale.Globals;
 
 // Namespace for menu-related scripts.
 namespace DishevelledBadger.FlashFrostVale.Menus

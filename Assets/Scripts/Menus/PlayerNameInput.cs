@@ -1,7 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using DishevelledBadger.FlashFrostVale.Globals; // Namespace for project wide helpers like DebugManager.
+using DishevelledBadger.FlashFrostVale.Globals;
 
 // Namespace for menu-related scripts.
 namespace DishevelledBadger.FlashFrostVale.Menus
@@ -81,7 +81,7 @@ namespace DishevelledBadger.FlashFrostVale.Menus
         /// Typically called by the input field's OnValueChanged event.
         /// </summary>
         /// <param name="name">The name entered by the player.</param>
-        public void SetPlayerName(string name) // Renamed from original to avoid conflict if used by InputField event
+        public void SetPlayerName(string name)
         {
             if (continueButton != null) continueButton.interactable = !string.IsNullOrEmpty(name);
         }

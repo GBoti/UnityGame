@@ -2,185 +2,147 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using DishevelledBadger.FlashFrostVale.Server;
+using DishevelledBadger.FlashFrostVale.Globals;
+using DishevelledBadger.FlashFrostVale.SharedData;
+using DishevelledBadger.FlashFrostVale.Networking;
 
 namespace DishevelledBadger.FlashFrostVale.Player
 {
+    // Represents a player's colony in the game, managing resources, production, and buildings.
+    // This is a NetworkBehaviour, with authority primarily on the server.
     public class Colony : NetworkBehaviour
     {
-        private List<Building> structures;
-        public HexGridLayout map;
-        public new CameraController camera;
-        public string desiredHexType;
-        [Header("Main building prefab")]
-        public Building mainBuilding;
+        // Server-side dictionaries for resource management.
+        private Dictionary<string, float> _serverStorage = new Dictionary<string, float>();
+        private Dictionary<string, float> _serverProduction = new Dictionary<string, float>();
 
-        //private List<TriangleHex> territory;
-        public List<Building> Structures
+        // --- Server-Side Logic Fields ---
+        private List<Building> _serverLogicalStructures; // Server's list of this colony's Building instances.
+
+        [Header("Colony Setup (Assign in NetworkGamePlayerFFV Prefab)")] // Inspector settings for new colonies
+        [Tooltip("Data for the main colony building (e.g., Town Hall).")]
+        public BuildingTypeData mainBuildingTypeData; // ScriptableObject or data for the starting building.
+        public string desiredHexTypeForStart = "Meadow"; // Preferred terrain for initial placement.
+        float initialFood = 100;  // Starting resources.
+        float initialWood = 100;
+        float initialMud = 0;
+        float initialStone = 0;
+
+        // --- Client-Side References (For local player's UI/control, NOT networked state) ---
+        public HexGridLayout clientMapReference; // Optional: reference to map visuals for client interaction.
+        public CameraController clientCamera;     // Optional: reference to local player's camera.
+
+        // Read-only server-side access to the list of buildings this colony owns.
+        public List<Building> Structures => _serverLogicalStructures;
+
+        // --- Initialization ---
+        public override void OnStartServer() // Called on the server when this NetworkBehaviour starts.
         {
-            get => structures;
-            set => structures = value;
+            base.OnStartServer();
+            // Initialize server-side collections. Full resource init often handled by NetworkManager or player spawn logic.
+            _serverLogicalStructures = new List<Building>();
+            if (_serverStorage == null) _serverStorage = new Dictionary<string, float>();
+            if (_serverProduction == null) _serverProduction = new Dictionary<string, float>();
         }
 
-        /*public List<TriangleHex> Territory
+        /// <summary>[SERVER] Ensures the server-side list of buildings is initialized.</summary>
+        [Server] // This method only runs on the server.
+        public void InitializeStructuresList()
         {
-            get => territory;
-            set => territory = value;
-        }*/
+            if (_serverLogicalStructures == null) _serverLogicalStructures = new List<Building>();
+        }
 
-        public Dictionary<string, float> production;
-        public Dictionary<string, float> storage;
-
-        public void PlaceColony()
+        /// <summary>[SERVER] Sets up the initial resources and production for this colony.</summary>
+        [Server]
+        public void InitializeColonyOnServer()
         {
-            List<TriangleHex> potentialBaseHexes = map.hexes.FindAll(h => h.Terrain == desiredHexType);
-            if (potentialBaseHexes.Count < 1)
+            if (DebugManager.DebugModeEnabled) Debug.Log($"Colony [Server NetID: {this.netId}]: Initializing resources.");
+            // Set initial storage.
+            _serverStorage["food"] = initialFood;
+            _serverStorage["wood"] = initialWood;
+            _serverStorage["mud"] = initialMud;
+            _serverStorage["stone"] = initialStone;
+            // Set initial production (usually starts at 0 until buildings add to it).
+            _serverProduction["food"] = 0;
+            _serverProduction["wood"] = 0;
+            _serverProduction["mud"] = 0;
+            _serverProduction["stone"] = 0;
+        }
+
+        /// <summary>[SERVER] Places the initial colony building on the server's logical map.</summary>
+        /// <param name="startHexLogic">The server's logical hex tile for placement.</param>
+        /// <param name="buildingLogicPrefab">The prefab/template for the logical building instance.</param>
+        [Server]
+        public void PlaceInitialColonyBuilding(TriangleHex startHexLogic, Building buildingLogicPrefab)
+        {
+            if (startHexLogic == null || buildingLogicPrefab == null) 
             {
-                potentialBaseHexes = map.hexes.FindAll(h => h.Terrain == "Meadow");
-                if (potentialBaseHexes.Count < 1)
-                {
-                    return;
-                }
+                if (DebugManager.DebugModeEnabled) Debug.Log($"Colony PlaceInitialColonyBuilding : startHexLogic or buildingLogicPrefab is null, returning");
+                return;
+            }
+            if (startHexLogic.Occupant != null) 
+            {
+                if (DebugManager.DebugModeEnabled) Debug.Log($"Colony PlaceInitialColonyBuilding : startHexLogic {startHexLogic.IndexCoordinates} is already occupied");
+                return; 
             }
 
-            int index = UnityEngine.Random.Range(0, potentialBaseHexes.Count - 1);
-            if (potentialBaseHexes[index].Occupant != null)
+            // Instantiate server-side logical building (as Building is a MonoBehaviour).
+            Building newBuildingInstance = Instantiate(buildingLogicPrefab);
+            // Copy properties from prefab/data to the instance.
+            newBuildingInstance.buildingName = buildingLogicPrefab.buildingName;
+            newBuildingInstance.food = buildingLogicPrefab.food; newBuildingInstance.foodCost = buildingLogicPrefab.foodCost;
+            newBuildingInstance.wood = buildingLogicPrefab.wood; newBuildingInstance.woodCost = buildingLogicPrefab.woodCost;
+            newBuildingInstance.mud = buildingLogicPrefab.mud; newBuildingInstance.mudCost = buildingLogicPrefab.mudCost;
+            newBuildingInstance.stone = buildingLogicPrefab.stone; newBuildingInstance.stoneCost = buildingLogicPrefab.stoneCost;
+
+            startHexLogic.Occupant = newBuildingInstance; // Assign to server's logical hex.
+            InitializeStructuresList(); // Ensure list is ready.
+            if (!_serverLogicalStructures.Contains(newBuildingInstance)) _serverLogicalStructures.Add(newBuildingInstance);
+
+            // Update server-side production based on the new building.
+            _serverProduction["food"] += newBuildingInstance.food; 
+           _serverProduction["wood"] += newBuildingInstance.wood;
+            _serverProduction["mud"] += newBuildingInstance.mud;
+            _serverProduction["stone"] += newBuildingInstance.stone;
+
+            // Update synced map data so clients see the new building.
+            if (MapManager.Instance != null)
             {
-                index++;
-                if (index >= potentialBaseHexes.Count)
+                int tileIndex = MapManager.Instance.SyncedHexTiles.FindIndex(td => td.coordinates == startHexLogic.IndexCoordinates);
+                if (tileIndex != -1)
                 {
-                    index -= potentialBaseHexes.Count;
+                    HexTileData data = MapManager.Instance.SyncedHexTiles[tileIndex];
+                    int buildingTypeId = (mainBuildingTypeData != null) ? mainBuildingTypeData.buildingId : 0;
+                    data.occupantBuildingTypeId = buildingTypeId;
+                    data.occupantOwnerNetId = this.netId; // Owner is this Colony's player.
+                    MapManager.Instance.SyncedHexTiles[tileIndex] = data; // Triggers SyncList update.
+                }
+                else
+                {
+                    if (DebugManager.DebugModeEnabled) Debug.Log($"Colony PlaceInitialColonyBuilding : target tile {startHexLogic.IndexCoordinates} could not be found in SyncedHexTiles");
                 }
             }
-            AddBuilding(potentialBaseHexes[index], mainBuilding);
-            camera.transform.position = map.GetPositionForHexFromCoordinate(
-                potentialBaseHexes[index].IndexCoordinates
-            );
+            if (DebugManager.DebugModeEnabled) Debug.Log($"Colony [Server NetID: {this.netId}]: Placed initial building '{buildingLogicPrefab.buildingName}'.");
         }
 
-        public void InitColony()
-        {
-            structures = new List<Building>();
-
-            production = new Dictionary<string, float>();
-            production["food"] = 0;
-            production["wood"] = 0;
-            production["mud"] = 0;
-            production["stone"] = 0;
-
-            storage = new Dictionary<string, float>();
-            storage["food"] = 100;
-            storage["wood"] = 100;
-            storage["mud"] = 0;
-            storage["stone"] = 0;
-        }
-
+        // --- Placeholder methods for future Command/Server-driven logic ---
+        // These currently have basic [Server] guards and log warnings.
         public void AddBuilding(TriangleHex h, Building b)
         {
-            storage["food"] -= b.foodCost;
-            storage["wood"] -= b.woodCost;
-            storage["mud"] -= b.mudCost;
-            storage["stone"] -= b.stoneCost;
-            bool sufficienResources = true;
-            foreach (float n in storage.Values)
-            {
-                if (n < 0)
-                {
-                    sufficienResources = false;
-                }
-            }
-            if (sufficienResources)
-            {
-                h.Occupant = b;
-                structures.Add(b);
-                production["food"] += b.food;
-                production["wood"] += b.wood;
-                production["mud"] += b.mud;
-                production["stone"] += b.stone;
-            }
-            else
-            {
-                storage["food"] += b.foodCost;
-                storage["wood"] += b.woodCost;
-                storage["mud"] += b.mudCost;
-                storage["stone"] += b.stoneCost;
-            }
+            if (!NetworkServer.active) { return; }
+            if (DebugManager.DebugModeEnabled) Debug.LogWarning("Colony.AddBuilding: Placeholder server logic. Use Command.");
         }
 
         public void RemoveBuilding(TriangleHex h)
         {
-            //RemoveTerritory(h, h.Occupant.influenceRadius);
-            structures.Remove(h.Occupant);
-            production["food"] -= h.Occupant.food;
-            production["wood"] -= h.Occupant.wood;
-            production["mud"] -= h.Occupant.mud;
-            production["stone"] -= h.Occupant.stone;
-
-            // TODO: removal cost return needs tweaking
-            storage["food"] += h.Occupant.foodCost;
-            storage["wood"] += h.Occupant.woodCost;
-            storage["mud"] += h.Occupant.mudCost;
-            storage["stone"] += h.Occupant.stoneCost;
-            h.Occupant = null;
+            if (!NetworkServer.active) { return; }
+            if (DebugManager.DebugModeEnabled) Debug.LogWarning("Colony.RemoveBuilding: Placeholder server logic. Use Command.");
         }
 
-        public void Produce()
+        public void Produce() // To be called by a server-side tick manager.
         {
-            storage["food"] += production["food"];
-            storage["wood"] += production["wood"];
-            storage["mud"] += production["mud"];
-            storage["stone"] += production["stone"];
+            if (!NetworkServer.active) { return; }
+            if (DebugManager.DebugModeEnabled) Debug.LogWarning("Colony.Produce: Placeholder server logic. Implement server tick.");
         }
-
-        /*
-        public void AddTerritory(TriangleHex center, int radius)
-        {
-            territory.Add(center);
-            List<TriangleHex> previousWave = new List<TriangleHex>();
-            previousWave.Add(center);
-            List<TriangleHex> waveStore = new List<TriangleHex>();
-            for (int i = 0; i < radius; i++)
-            {
-                foreach (TriangleHex h in previousWave)
-                {
-                    foreach (TriangleHex n in h.Neighbours.Values)
-                    {
-                        if (!territory.Contains(n))
-                        {
-                            territory.Add(n);
-                        }
-                        waveStore.Add(n);
-                    }
-                }
-
-            }
-        }
-
-        public void RemoveTerritory(TriangleHex center, int radius)
-        {
-            //remove territory around removed building
-            //check if it is in another buildings radius
-        }
-
-        public void AddBuilding(TriangleHex h, Building b)
-        {
-            if (structures.Count == 0)
-            {
-                structures.Add(b);
-                AddTerritory(h, b.influenceRadius);
-            }
-            else
-            {
-                if (territory.Contains(h))
-                {
-                    structures.Add(b);
-                    AddTerritory(h, b.influenceRadius);
-                }
-                else
-                {
-                    //Can't build here
-                }
-            }
-        }
-        */
     }
 }

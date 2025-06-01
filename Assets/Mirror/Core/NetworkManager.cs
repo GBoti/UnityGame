@@ -1191,7 +1191,7 @@ namespace Mirror
                 return;
             }
 
-            OnServerAddPlayer(conn);
+            OnServerAddLobbyPlayer(conn);
         }
 
         void OnClientConnectInternal()
@@ -1341,7 +1341,7 @@ namespace Mirror
 
         /// <summary>Called on server when a client requests to add the player. Adds playerPrefab by default. Can be overwritten.</summary>
         // The default implementation for this function creates a new player object from the playerPrefab.
-        public virtual void OnServerAddPlayer(NetworkConnectionToClient conn)
+        public virtual void OnServerAddLobbyPlayer(NetworkConnectionToClient conn)
         {
             Transform startPos = GetStartPosition();
             GameObject player = startPos != null

@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DishevelledBadger.FlashFrostVale.SharedData;
+using DishevelledBadger.FlashFrostVale.Globals;
+using Mirror;
 
 namespace DishevelledBadger.FlashFrostVale.Server
 {
+    // Defines the 6 directions for hexagonal neighbours.
     public enum side
     {
         left,
@@ -13,172 +17,214 @@ namespace DishevelledBadger.FlashFrostVale.Server
         bottomleft
     }
 
+    // Represents a single hexagonal tile in the game world, handling both server logic and client visuals.
     public class TriangleHex : MonoBehaviour
     {
-        private Vector2Int indexCoordinates;
-        private Dictionary<side, TriangleHex> neighbours;
-        private Material basic;
-        private Material selected;
-        private Material backGround;
-        private string terrain;
-        private Dictionary<string, float> resources;
+        // --- Common Fields (Server & Client) ---
+        private Vector2Int _indexCoordinates; // Grid position of this hex.
+        private float _height;                // Height of the terrain on this hex
 
-        private float height;
-        private Building occupant;
-        private Vector3 previousLocalScale;
+        // --- Server-Side Logical Fields ---
+        private Dictionary<side, TriangleHex> _logicalNeighbours; // Adjacent hexes (server-side).
+        private string _logicalTerrainTypeString;                 // E.g., "Forest", "Water" (server-side).
+        private Dictionary<string, float> _logicalResources;    // Available resources on this hex (server-side).
+        private Building _logicalOccupantBuildingInstance;      // Building instance on this hex (server-side).
+        private Vector3 _previousLocalScaleServer;            // Stores initial scale for server-side height adjustments.
 
-        public Vector2Int IndexCoordinates
+        // --- Client-Side Visual Fields ---
+        [Header("Client Visuals - Assign in Prefab if this script is on Visual Hex")]
+        [Tooltip("MeshRenderer of the child 'BackgroundHex' object used for selection highlighting.")]
+        [SerializeField] public MeshRenderer backgroundHexRenderer; // Renderer for selection highlight (client-side).
+        private Material _originalBackgroundMaterial;             // Original material to revert selection (client-side).
+        private bool _isVisuallySelectedLocally = false;        // Tracks if this hex is selected by the local client.
+
+        // --- Properties ---
+        public Vector2Int IndexCoordinates // Public accessor for grid position.
         {
-            set => indexCoordinates = value;
-            get => indexCoordinates;
+            get => _indexCoordinates;
+            private set => _indexCoordinates = value; // Settable internally or during initialization.
         }
 
-        public string Terrain
+        public float Height // Public accessor for game world elevation.
         {
-            set => terrain = value;
-            get => terrain;
+            get => _height;
+            set => _height = value;
         }
 
-        public Material Basic
+        // Server-Side Specific Properties
+        public string Terrain // Logical terrain type (Server-only write).
         {
-            set => basic = value;
-            get => basic;
+            get => _logicalTerrainTypeString;
+            set { if (Mirror.NetworkServer.active) _logicalTerrainTypeString = value; } // Only server can set.
         }
+        public Dictionary<side, TriangleHex> Neighbours => _logicalNeighbours; // Read-only access to server-side neighbours.
+        public Dictionary<string, float> Resources { get => _logicalResources; set { if (Mirror.NetworkServer.active) _logicalResources = value; } } // Server-side resources (Server-only write).
 
-        public float Height
+        public Building Occupant // Logical building occupant (Server-only write with cleanup).
         {
-            set => height = value;
-            get => height;
-        }
-
-        public Dictionary<side, TriangleHex> Neighbours
-        {
-            get => neighbours;
-        }
-
-        public Dictionary<string, float> Resources
-        {
-            get => resources;
-            set => resources = value;
-        }
-
-        public Building Occupant
-        {
-            get => occupant;
+            get => _logicalOccupantBuildingInstance;
             set
             {
-                if (value == null)
+                if (!Mirror.NetworkServer.active) // Prevent client modification.
                 {
-                    Destroy(occupant.gameObject);
-                    occupant = null;
+                    if (DebugManager.DebugModeEnabled && Application.isPlaying) Debug.LogWarning($"TriangleHex.Occupant setter called on client for hex {IndexCoordinates}. This is server-side logic.");
+                    return;
                 }
-                else
+                if (_logicalOccupantBuildingInstance != null) // If an old building exists...
                 {
-                    occupant = Instantiate(value, transform.localPosition, Quaternion.identity);
-                    occupant.transform.localScale += new Vector3(0, height, 0);
-                    occupant.name = value.name;
+                    Destroy(_logicalOccupantBuildingInstance.gameObject); // ...destroy it.
+                }
+                _logicalOccupantBuildingInstance = value; // Set the new building.
+                if (_logicalOccupantBuildingInstance != null) // If a new building is assigned...
+                {
+                    _logicalOccupantBuildingInstance.transform.SetParent(this.transform); // Parent it to this hex.
+                    _logicalOccupantBuildingInstance.transform.localPosition = new Vector3(0, _height, 0); // Position it.
                 }
             }
         }
 
-        public void InitiateHex(
-            Vector2Int iC,
-            Material b,
-            Material s,
-            Material bG,
-            Material g,
-            Material w
-        )
+        // --- Server-Side Initialization ---
+        // Initializes a logical hex instance on the server.
+        public void InitiateHex(Vector2Int iC)
         {
-            indexCoordinates = iC;
-            neighbours = new Dictionary<side, TriangleHex>();
-            basic = b;
-            selected = s;
-            backGround = bG;
-            resources = new Dictionary<string, float>();
-            occupant = null;
-            previousLocalScale = transform.localScale;
+            this.IndexCoordinates = iC;
+            this._logicalNeighbours = new Dictionary<side, TriangleHex>();
+            this._logicalResources = new Dictionary<string, float>();
+            this.Occupant = null;         // Start with no occupant.
+            this.Terrain = "ground";      // Default terrain.
+            this._previousLocalScaleServer = transform.localScale;
         }
 
-        public void Clicked()
+        // --- Client-Side Initialization ---
+        // Initializes a visual hex instance on the client based on server data.
+        public void InitializeClientVisual(HexTileData data, Material visualMaterialFromPrefab)
         {
-            SetBackgroundMaterial(selected);
-            //Debug.Log("Clicked hex coords: (" + transform.position.x + ", " + transform.position.z + ")\n");
-        }
+            this.IndexCoordinates = data.coordinates;
+            this.Height = data.height;
+            this.name = $"VisualHex_{data.coordinates.x}_{data.coordinates.y}";
 
-        public void Declicked()
-        {
-            SetBackgroundMaterial(backGround);
-        }
-
-        public void SetMaterial(Material m)
-        {
-            basic = m;
-            for (int i = 0; i < transform.childCount - 1; i++)
+            if (backgroundHexRenderer != null)
             {
-                transform.GetChild(i).GetComponent<MeshRenderer>().material = m;
+                _originalBackgroundMaterial = backgroundHexRenderer.sharedMaterial; // Store original material.
+            }
+            else if (DebugManager.DebugModeEnabled) // Fallback to find renderer if not assigned.
+            {
+                Transform bgHexTransform = transform.Find("BackgroundHex");
+                if (bgHexTransform != null)
+                {
+                    backgroundHexRenderer = bgHexTransform.GetComponent<MeshRenderer>();
+                    if (backgroundHexRenderer != null) _originalBackgroundMaterial = backgroundHexRenderer.sharedMaterial;
+                    else Debug.LogWarning($"TriangleHex Visual {name}: Child 'BackgroundHex' found, but no MeshRenderer.");
+                }
+                else Debug.LogWarning($"TriangleHex Visual {name}: backgroundHexRenderer not assigned and 'BackgroundHex' child not found.");
             }
         }
 
-        public void SetHeight(float h)
+        /// <summary>Highlights this hex visual for local selection.</summary>
+        public void SelectVisual(Material selectionMaterial)
         {
-            transform.localScale = previousLocalScale;
-            transform.localScale += new Vector3(0, h * 100, 0);
+            if (backgroundHexRenderer == null)
+            {
+                if (DebugManager.DebugModeEnabled) Debug.LogWarning($"TriangleHex Visual {name}: Cannot SelectVisual, backgroundHexRenderer is null.");
+                return;
+            }
+            if (_originalBackgroundMaterial == null) _originalBackgroundMaterial = backgroundHexRenderer.sharedMaterial; // Ensure original is stored.
+            if (selectionMaterial != null) backgroundHexRenderer.material = selectionMaterial; // Apply selection.
+            else if (DebugManager.DebugModeEnabled) Debug.LogWarning($"TriangleHex Visual {name}: SelectVisual called with null selectionMaterial.");
+            _isVisuallySelectedLocally = true;
         }
 
-        public void SetBackgroundMaterial(Material mat)
+        /// <summary>Reverts this hex visual to its original appearance.</summary>
+        public void DeselectVisual()
         {
-            transform.GetChild(7).gameObject.GetComponent<MeshRenderer>().material = mat;
+            if (backgroundHexRenderer == null || _originalBackgroundMaterial == null) return; // Nothing to revert or no renderer.
+            backgroundHexRenderer.material = _originalBackgroundMaterial; // Revert material.
+            _isVisuallySelectedLocally = false;
         }
 
-        public Material GetMaterial()
+        // --- Server-Side Logic Methods ---
+        [Server] // This method only runs on the server.
+        public void SetMaterial(Material m) // Sets material for server's visual representation (if any).
         {
-            return transform.GetChild(0).GetComponent<MeshRenderer>().material;
+            for (int i = 0; i < transform.childCount - 1; i++) // Iterate children (excluding potential background).
+            {
+                MeshRenderer mr = transform.GetChild(i).GetComponent<MeshRenderer>();
+                if (mr != null) mr.material = m;
+            }
         }
 
-        public void AddNeighbour(TriangleHex nb, side s)
+        [Server] // This method only runs on the server.
+        public void SetHeight(float h) // Adjusts hex height and visual scale on the server.
         {
-            neighbours[s] = nb;
+            this.Height = h;
+            if (_previousLocalScaleServer == Vector3.zero) _previousLocalScaleServer = transform.localScale; // Cache original scale.
+            transform.localScale = _previousLocalScaleServer; // Reset scale before applying height.
+            transform.localScale += new Vector3(0, h * 100, 0); // Apply height scaling (100 seems to be a multiplier).
         }
 
-        public void GenerateResources()
+        [Server] // This method only runs on the server.
+        public void SetBackgroundMaterial(Material mat) // Sets background material on server.
         {
-            resources["food"] = 0.0f;
-            resources["wood"] = 0.0f;
-            resources["mud"] = 0.0f;
-            resources["stone"] = 0.0f;
+            if (transform.childCount > 0)
+            {
+                Transform child = transform.GetChild(transform.childCount - 1); // Assume last child is background.
+                MeshRenderer mr = child.GetComponent<MeshRenderer>();
+                if (mr != null) mr.material = mat;
+            }
+        }
 
-            switch (terrain)
+        [Server] // This method only runs on the server.
+        public Material GetMaterial() // Gets main material from the server's first child renderer.
+        {
+            if (transform.childCount > 0)
+            {
+                MeshRenderer mr = transform.GetChild(0).GetComponent<MeshRenderer>();
+                if (mr != null) return mr.material;
+            }
+            return null;
+        }
+
+        [Server] // This method only runs on the server.
+        public void AddNeighbour(TriangleHex nb, side s) // Adds a logical neighbour on the server.
+        {
+            if (_logicalNeighbours == null) _logicalNeighbours = new Dictionary<side, TriangleHex>();
+            _logicalNeighbours[s] = nb;
+        }
+
+        [Server] // This method only runs on the server.
+        public void GenerateResources() // Generates resources for this hex based on its terrain type.
+        {
+            if (_logicalResources == null) _logicalResources = new Dictionary<string, float>();
+
+            // Initialize all resources to 0.
+            _logicalResources["food"] = 0.0f;
+            _logicalResources["wood"] = 0.0f;
+            _logicalResources["mud"] = 0.0f;
+            _logicalResources["stone"] = 0.0f;
+
+            // Populate resources based on terrain.
+            switch (_logicalTerrainTypeString)
             {
                 case "Water":
-                    resources["food"] = Random.Range(1, 3);
-                    resources["wood"] = Random.Range(0, 1);
-                    resources["mud"] = Random.Range(1, 2);
-                    resources["stone"] = Random.Range(0, 1);
+                    _logicalResources["food"] = Random.Range(1, 3); _logicalResources["wood"] = Random.Range(0, 1);
+                    _logicalResources["mud"] = Random.Range(1, 2); _logicalResources["stone"] = Random.Range(0, 1);
                     break;
                 case "Sand":
-                    resources["food"] = 0.0f;
-                    resources["wood"] = 0.0f;
-                    resources["mud"] = Random.Range(0, 1);
-                    resources["stone"] = Random.Range(0, 1);
+                    _logicalResources["mud"] = Random.Range(0, 1); _logicalResources["stone"] = Random.Range(0, 1);
                     break;
                 case "Meadow":
-                    resources["food"] = Random.Range(1, 3);
-                    resources["wood"] = Random.Range(0, 1);
-                    resources["mud"] = 0.0f;
-                    resources["stone"] = 0.0f;
+                    _logicalResources["food"] = Random.Range(1, 3); _logicalResources["wood"] = Random.Range(0, 1);
                     break;
                 case "Forest":
-                    resources["food"] = Random.Range(0, 1);
-                    resources["wood"] = Random.Range(2, 4);
-                    resources["mud"] = 0.0f;
-                    resources["stone"] = 0.0f;
+                    _logicalResources["food"] = Random.Range(0, 1); _logicalResources["wood"] = Random.Range(2, 4);
                     break;
                 case "Mountain":
-                    resources["food"] = 0.0f;
-                    resources["wood"] = 0.0f;
-                    resources["mud"] = 0.0f;
-                    resources["stone"] = Random.Range(1, 3);
+                    _logicalResources["stone"] = Random.Range(1, 3);
+                    break;
+                case "Snowy Peak": // No resources by default.
+                    break;
+                default:
+                    if (DebugManager.DebugModeEnabled) Debug.LogWarning($"TriangleHex {IndexCoordinates}: GenerateResources called with unhandled terrain type: '{_logicalTerrainTypeString}'");
                     break;
             }
         }

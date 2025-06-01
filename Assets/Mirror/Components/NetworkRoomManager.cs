@@ -285,7 +285,7 @@ namespace Mirror
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+        public override void OnServerAddLobbyPlayer(NetworkConnectionToClient conn)
         {
             // increment the index before adding the player, so first player starts at 1
             clientIndex++;
@@ -558,7 +558,7 @@ namespace Mirror
         /// <param name="conn">The connection the player object is for.</param>
         public virtual void OnRoomServerAddPlayer(NetworkConnectionToClient conn)
         {
-            base.OnServerAddPlayer(conn);
+            base.OnServerAddLobbyPlayer(conn);
         }
 
         // for users to apply settings from their room player object to their in-game player object

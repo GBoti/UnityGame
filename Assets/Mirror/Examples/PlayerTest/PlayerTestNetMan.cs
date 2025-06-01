@@ -150,9 +150,9 @@ namespace Mirror.Examples.PlayerTest
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+        public override void OnServerAddLobbyPlayer(NetworkConnectionToClient conn)
         {
-            base.OnServerAddPlayer(conn);
+            base.OnServerAddLobbyPlayer(conn);
         }
 
         /// <summary>

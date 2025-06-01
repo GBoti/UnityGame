@@ -3,274 +3,229 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using DishevelledBadger.FlashFrostVale.Server.Generator;
-using DishevelledBadger.FlashFrostVale.Player;
+using DishevelledBadger.FlashFrostVale.Globals;
+using DishevelledBadger.FlashFrostVale.Networking;
+using DishevelledBadger.FlashFrostVale.SharedData;
 
-//Hexre collider
 namespace DishevelledBadger.FlashFrostVale.Server
 {
+    // Manages the server-side logical grid of hexagonal tiles.
     public class HexGridLayout : NetworkBehaviour
     {
         [Header("Grid Settings")]
-        public Vector2Int gridSize;
+        public Vector2Int gridSize; // Dimensions of the hex grid (columns, rows).
 
         [Header("Tile Settings")]
-        public float size = 1f;
+        public float size = 1f; // Size of individual hex tiles.
 
         [Header("Pathfinding weights")]
-        public float heightWeight;
-        public float pathWeight;
+        public float heightWeight; // Influence of height differences in pathfinding (used by MapGenerator).
+        public float pathWeight;   // Influence of heuristics in pathfinding (used by MapGenerator).
 
-        [Header("Materials")]
-        public Material ground;
-        public Material water;
-        public Material backGround;
-        public Material selected;
-        public Material neighbour;
-        public Material forest;
-        public Material sand;
-        public Material mountain;
-        public Material mountainPeak;
-
-        [Header("Info panel")]
-        public InfoPanel infoPanel; //This needs to change, info panels should be managed by the player
-        public GameObject buildingTypes;
-
-        [Header("Hex base")]
-        public GameObject hex;
+        [Header("Hex Prefab (Logical Server Tile)")]
+        [Tooltip("Prefab for the server-side logical hex tile. Must have TriangleHex component.")]
+        public GameObject hexPrefab; // Prefab for server-side logical hex tiles.
 
         [Header("Generator Object")]
-        public MapGenerator generator;
+        [Tooltip("Reference to the MapGenerator component/GameObject.")]
+        public MapGenerator mapGenerator; // Reference to the map generation logic.
 
-        private readonly float sqrt3 = Mathf.Sqrt(3);
-        public List<TriangleHex> hexes = new List<TriangleHex>();
-        private List<GameObject> backgroundHexes = new List<GameObject>();
-        private TriangleHex currentSelected;
+        private readonly float sqrt3 = Mathf.Sqrt(3); // Cached square root of 3 for hex calculations.
+        public List<TriangleHex> serverLogicalHexes = new List<TriangleHex>(); // Stores all server-side logical hex instances.
 
-        public TriangleHex CurrentSelected
+        public MapGenerator MapGeneratorInstance // Public accessor for the map generator.
         {
-            get => currentSelected;
+            get => mapGenerator;
+            set => mapGenerator = value;
         }
 
-        public MapGenerator Generator
+        /// <summary>[SERVER] Creates server's internal logical grid. Instantiates non-networked TriangleHex objects.</summary>
+        [Server] // Ensures this method only runs on the server.
+        private void CreateServerLogicGrid()
         {
-            get => generator;
-            set => generator = value;
-        }
+            DestroyServerLogicGrid(); // Clear any existing logical grid.
+            if (DebugManager.DebugModeEnabled) Debug.Log($"HexGridLayout [SERVER-LOGIC]: Creating server logic grid {gridSize.x}, {gridSize.y}");
 
-        public void DisplayBoard()
-        {
-            long t = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            generator.hexes = hexes;
-            LayoutGrid();
-            //Debug.Log("Grid layed out in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
-            Generator.Procedural_Map_Generate();
-            //Debug.Log("Generated in " + (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - t) + "ms");
-            infoPanel.Hide();
-            buildingTypes.transform.gameObject.SetActive(false);
-        }
-
-        public void LayoutGrid()
-        {
-            DestroyGrid();
-            //Debug.Log($"Displaying grid {gridSize.x}, {gridSize.y}");
-
-            for (int y = 0; y < gridSize.y; y++)
+            if (hexPrefab == null) // Check if prefab is assigned.
             {
-                for (int x = 0; x < gridSize.x; x++)
-                {
-                    TriangleHex tile = Instantiate(
-                            hex,
-                            GetPositionForHexFromCoordinate(new Vector2Int(x, y)),
-                            transform.rotation
-                        )
-                        .GetComponent<TriangleHex>();
-                    tile.transform.SetParent(gameObject.transform);
-                    tile.transform.localScale = new Vector3(size * 20, size * 12, size * 20);
-                    tile.transform.localRotation *= Quaternion.Euler(0f, 0f, 0f);
-                    tile.Terrain = "ground";
-                    tile.InitiateHex(new Vector2Int(x, y), ground, selected, backGround, ground, water);
-                    // Current hex will go in the current = y * gridSize.x + x; slot in hexes
-                    int current = y * gridSize.x + x;
-                    // Need to add the already existing hexes, but need to check if they exist
-                    // (In the case of hex 0,0 there will be no other existing hexes)
-                    // In case of a non-existent hex, set the value to null
-                    // Already existing hexes are: Left, Top-left, Top-right, since
-                    // the grid is built from the top-left to the right then down.
-                    // the left is easy allways current-1, except when x == 0, then it's null
+                if (DebugManager.DebugModeEnabled) Debug.LogError("HexGridLayout [SERVER-LOGIC]: hexPrefab is not assigned!");
+                return;
+            }
 
+            for (int y = 0; y < gridSize.y; y++) // Iterate through rows.
+            {
+                for (int x = 0; x < gridSize.x; x++) // Iterate through columns.
+                {
+                    // Instantiate the logical hex tile at its calculated position.
+                    GameObject tileGO = Instantiate(
+                        hexPrefab,
+                        GetPositionForHexFromCoordinate(new Vector2Int(x, y)),
+                        Quaternion.identity
+                    );
+
+                    tileGO.transform.SetParent(gameObject.transform); // Organize under this GameObject.
+
+                    TriangleHex tileLogic = tileGO.GetComponent<TriangleHex>(); // Get the core logic component.
+                    if (tileLogic == null)
+                    {
+                        if (DebugManager.DebugModeEnabled) Debug.LogError($"HexGridLayout [SERVER-LOGIC]: hexPrefab '{hexPrefab.name}' missing TriangleHex component!");
+                        Destroy(tileGO); // Clean up if component is missing.
+                        continue;
+                    }
+
+                    // Apply scale (mostly for potential server-side debug visuals).
+                    tileLogic.transform.localScale = new Vector3(size * 20, size * 12, size * 20);
+                    tileLogic.Terrain = "ground"; // Set default terrain.
+                    tileLogic.InitiateHex(new Vector2Int(x, y)); // Initialize the hex logic.
+
+                    // --- Neighbor linking logic ---
+                    // The grid is built from left to right and top to bottom,
+                    // so if we add the left and top neighbours to a tile and the other way around too all hexes will have their neighbours
+                    // Left neighbor
                     if (x != 0)
                     {
-                        foreach (TriangleHex h in hexes)
+                        TriangleHex neighbor = serverLogicalHexes.Find(h => h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y);
+                        if (neighbor != null)
                         {
-                            if (h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y)
-                            {
-                                tile.AddNeighbour(h, side.right);
-                                h.AddNeighbour(tile, side.left);
-                            }
-                        }
-                    }
-                    if (!(y == 0 || (x == 0 && y % 2 != 0)))
-                    {
-                        foreach (TriangleHex h in hexes)
-                        {
-                            if (y % 2 == 0)
-                            {
-                                if (h.IndexCoordinates.x == x && h.IndexCoordinates.y == y - 1)
-                                {
-                                    tile.AddNeighbour(h, side.bottomright);
-                                    h.AddNeighbour(tile, side.topleft);
-                                }
-                            }
-                            if (y % 2 != 0)
-                            {
-                                if (h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y - 1)
-                                {
-                                    tile.AddNeighbour(h, side.bottomright);
-                                    h.AddNeighbour(tile, side.topleft);
-                                }
-                            }
-                        }
-                    }
-                    if (!(y == 0 || (x == ((y + 1) * gridSize.x) - 1 && y % 2 == 0)))
-                    {
-                        foreach (TriangleHex h in hexes)
-                        {
-                            if (y % 2 == 0)
-                            {
-                                if (h.IndexCoordinates.x == x + 1 && h.IndexCoordinates.y == y - 1)
-                                {
-                                    tile.AddNeighbour(h, side.bottomleft);
-                                    h.AddNeighbour(tile, side.topright);
-                                }
-                            }
-                            if (y % 2 != 0)
-                            {
-                                if (h.IndexCoordinates.x == x && h.IndexCoordinates.y == y - 1)
-                                {
-                                    tile.AddNeighbour(h, side.bottomleft);
-                                    h.AddNeighbour(tile, side.topright);
-                                }
-                            }
+                            tileLogic.AddNeighbour(neighbor, side.left);
+                            neighbor.AddNeighbour(tileLogic, side.right);
                         }
                     }
 
-                    // The other neighbours will be added as we build the grid.
-
-                    hexes.Add(tile);
+                    // Top neighbours
+                    if (y != 0)
+                    {
+                        // Odd rows as seen on screen (since we start from zero the first row is actually the 0th)
+                        if (y % 2 == 0)
+                        {
+                            TriangleHex neighbourTopLeft = serverLogicalHexes.Find(h => h.IndexCoordinates.x == x && h.IndexCoordinates.y == y -1);
+                            if(neighbourTopLeft != null)
+                            {
+                                tileLogic.AddNeighbour(neighbourTopLeft, side.topleft);
+                                neighbourTopLeft.AddNeighbour(tileLogic, side.bottomright);
+                            }
+                            TriangleHex neighbourTopRight = serverLogicalHexes.Find(h => h.IndexCoordinates.x == x + 1 && h.IndexCoordinates.y == y - 1);
+                            if(neighbourTopRight != null)
+                            {
+                                tileLogic.AddNeighbour(neighbourTopRight, side.topright);
+                                neighbourTopRight.AddNeighbour(tileLogic, side.bottomleft);
+                            }
+                        } 
+                        else // Even rows as seen on screen
+                        {
+                            TriangleHex neighbourTopLeft = serverLogicalHexes.Find(h => h.IndexCoordinates.x == x - 1 && h.IndexCoordinates.y == y - 1);
+                            if (neighbourTopLeft != null)
+                            {
+                                tileLogic.AddNeighbour(neighbourTopLeft, side.topleft);
+                                neighbourTopLeft.AddNeighbour(tileLogic, side.bottomright);
+                            }
+                            TriangleHex neighbourTopRight = serverLogicalHexes.Find(h => h.IndexCoordinates.x == x && h.IndexCoordinates.y == y - 1);
+                            if (neighbourTopRight != null)
+                            {
+                                tileLogic.AddNeighbour(neighbourTopRight, side.topright);
+                                neighbourTopRight.AddNeighbour(tileLogic, side.bottomleft);
+                            }
+                        }
+                    }
+                    
+                    serverLogicalHexes.Add(tileLogic); // Add successfully created logical tile to the list.
                 }
             }
 
-            GlobalConstants.mapTopEdge = GetPositionForHexFromCoordinate(hexes[0].IndexCoordinates).z;
-            GlobalConstants.mapLeftEdge = GetPositionForHexFromCoordinate(hexes[0].IndexCoordinates).x;
-            GlobalConstants.mapBottomEdge = GetPositionForHexFromCoordinate(
-                hexes[hexes.Count - 1].IndexCoordinates
-            ).z;
-            GlobalConstants.mapRightEdge = GetPositionForHexFromCoordinate(
-                hexes[hexes.Count - 1].IndexCoordinates
-            ).x;
-            /*
-            Debug.Log(
-                "Hex list edges top, right, bottom, left: "
-                    + hexes[0].IndexCoordinates.y
-                    + " "
-                    + hexes[0].IndexCoordinates.x
-                    + " "
-                    + hexes[hexes.Count - 1].IndexCoordinates.y
-                    + " "
-                    + hexes[hexes.Count - 1].IndexCoordinates.x
-                    + "\n"
-                    + "Map edges top, right, bottom, left: "
-                    + GlobalConstants.mapTopEdge
-                    + " "
-                    + GlobalConstants.mapRightEdge
-                    + " "
-                    + GlobalConstants.mapBottomEdge
-                    + " "
-                    + GlobalConstants.mapLeftEdge
-                    + "\n"
-                    + "Hex size scale x, y: "
-                    + hexes[0].transform.localScale.x
-                    + " "
-                    + hexes[0].transform.localScale.z
-                    + "\n"
-            );
-            */
+            // Set global map boundary constants if tiles were created.
+            if (serverLogicalHexes.Count > 0)
+            {
+                GlobalConstants.mapTopEdge = GetPositionForHexFromCoordinate(serverLogicalHexes[0].IndexCoordinates).z;
+                GlobalConstants.mapLeftEdge = GetPositionForHexFromCoordinate(serverLogicalHexes[0].IndexCoordinates).x;
+                GlobalConstants.mapBottomEdge = GetPositionForHexFromCoordinate(serverLogicalHexes[serverLogicalHexes.Count - 1].IndexCoordinates).z;
+                GlobalConstants.mapRightEdge = GetPositionForHexFromCoordinate(serverLogicalHexes[serverLogicalHexes.Count - 1].IndexCoordinates).x;
+            }
+            if (DebugManager.DebugModeEnabled) Debug.Log($"HexGridLayout [SERVER-LOGIC]: Finished creating {serverLogicalHexes.Count} logical hex instances.");
         }
 
-        public void ManageSelected(TriangleHex clicked)
+        /// <summary>[SERVER] Generates map's logical structure and data. Returns list of HexTileData for clients.</summary>
+        [Server]
+        public List<HexTileData> GenerateInitialMapLogicAndData()
         {
-            infoPanel.Hide();
-            buildingTypes.transform.gameObject.SetActive(false);
-            if (currentSelected != null)
+            if (!NetworkServer.active) // Server-only check.
             {
-                currentSelected.Declicked();
+                if (DebugManager.DebugModeEnabled) Debug.LogWarning("HexGridLayout: GenerateInitialMapLogicAndData called, but not on active server.");
+                return null;
             }
-            if (currentSelected == clicked)
+            // MapManager.Instance is used for type conversion, ensure it exists.
+            if (MapManager.Instance == null)
             {
-                currentSelected = null;
+                if (DebugManager.DebugModeEnabled) Debug.LogError("HexGridLayout [SERVER]: MapManager.Instance is null.");
+                return null;
+            }
+
+            if (DebugManager.DebugModeEnabled) Debug.Log("HexGridLayout [SERVER]: Starting generation of server-side logical grid.");
+            CreateServerLogicGrid(); // Create the base logical grid.
+
+            if (this.MapGeneratorInstance != null) // If a map generator is assigned...
+            {
+                this.MapGeneratorInstance.hexes = this.serverLogicalHexes; // ...pass it the grid...
+                this.MapGeneratorInstance.gridSize = this.gridSize;       // ...and its dimensions...
+                this.MapGeneratorInstance.Procedural_Map_Generate();      // ...then run generation.
             }
             else
             {
-                currentSelected = clicked;
-                clicked.Clicked();
-                infoPanel.Show(clicked);
+                if (DebugManager.DebugModeEnabled) Debug.LogError("HexGridLayout [SERVER]: MapGeneratorInstance not assigned!");
+                return null;
             }
-        }
 
-        public void DestroyGrid()
-        {
-            //Debug.Log("Destroying grid...");
-
-            foreach (TriangleHex child in hexes)
+            List<HexTileData> generatedTiles = new List<HexTileData>(); // Prepare data for clients.
+            foreach (TriangleHex serverTileLogic in this.serverLogicalHexes) // Convert logical tiles to data DTOs.
             {
-                Destroy(child.gameObject);
+                if (serverTileLogic == null) continue;
+                HexTileData data = new HexTileData(
+                    serverTileLogic.IndexCoordinates,
+                    MapManager.Instance.GetHexTypeIdFromServerTerrain(serverTileLogic.Terrain), // Get client-side type ID.
+                    serverTileLogic.Height
+                );
+                generatedTiles.Add(data);
             }
-            hexes.Clear();
+
+            if (DebugManager.DebugModeEnabled) Debug.Log($"HexGridLayout [SERVER]: Finished generation. Generated {generatedTiles.Count} tiles for server logic.");
+            return generatedTiles; // Return data for client map setup.
         }
 
+        /// <summary>[SERVER] Destroys all server-side logical hex GameObjects.</summary>
+        [Server]
+        public void DestroyServerLogicGrid()
+        {
+            if (DebugManager.DebugModeEnabled) Debug.Log("HexGridLayout [SERVER-LOGIC]: Destroying server logic grid...");
+            foreach (TriangleHex childLogic in serverLogicalHexes) // Iterate through existing logical tiles.
+            {
+                if (childLogic != null && childLogic.gameObject != null)
+                {
+                    Destroy(childLogic.gameObject); // Destroy their GameObjects.
+                }
+            }
+            serverLogicalHexes.Clear(); // Clear the list.
+        }
+
+        /// <summary>Calculates world position for a hex from its grid coordinate (even-r offset).</summary>
         public Vector3 GetPositionForHexFromCoordinate(Vector2Int coordinate)
         {
             int column = coordinate.x;
             int row = coordinate.y;
 
-            float width;
-            float height;
-            float xPosition = 0;
-            float yPosition = 0;
-            bool shouldOffset;
-            float horizontalDistance;
-            float verticalDistance;
-            float offset;
-            float hexSize = size;
+            float width, height_geom, xPosition, zPosition;
+            bool shouldOffset = (row % 2) == 0; // Even rows are offset horizontally.
+            float currentHexSize = this.size;
 
-            shouldOffset = (row % 2) == 0;
-            width = sqrt3 * hexSize;
-            height = 2f * hexSize;
+            width = sqrt3 * currentHexSize;        // Geometric width of a hex.
+            height_geom = 2f * currentHexSize;   // Geometric height of a hex.
 
-            horizontalDistance = width;
-            verticalDistance = height * (3f / 4f);
+            float horizontalDistance = width;
+            float verticalDistance = height_geom * (3f / 4f); // Vertical distance between hex centers.
+            float offset = shouldOffset ? width / 2f : 0f;  // Horizontal offset for even rows.
 
-            offset = shouldOffset ? width / 2 : 0;
+            xPosition = (column * horizontalDistance) + offset;
+            zPosition = row * verticalDistance;
 
-            xPosition = column * horizontalDistance + offset;
-            yPosition = row * verticalDistance;
-
-            return new Vector3(xPosition, 0, -yPosition);
+            return new Vector3(xPosition, 0, -zPosition); // Y is 0 (flat plane), Z is negated for typical top-down view.
         }
-
-        /*
-        TODO: On holding alt display resources on hexes
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.LeftAlt))
-            {
-
-            }
-            if (Input.GetKeyUp(KeyCode.LeftAlt))
-            {
-
-            }
-        }
-        */
     }
 }

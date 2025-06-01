@@ -1,12 +1,9 @@
 using UnityEngine;
-using Mirror; // Mirror networking library.
-using System; // For Action event type.
-using DishevelledBadger.FlashFrostVale.Globals; // Access to DebugManager.
-using System.IO; // For Path operations in test mode name generation.
+using Mirror;
+using System;
+using DishevelledBadger.FlashFrostVale.Globals;
+using System.IO;
 
-//Needs reading through
-
-// Namespace for network-related classes.
 namespace DishevelledBadger.FlashFrostVale.Networking
 {
     /// <summary>
@@ -63,7 +60,7 @@ namespace DishevelledBadger.FlashFrostVale.Networking
             if (LobbyManager != null)
             {
                 // The NetworkManager will handle setting IsLeader status during registration.
-                LobbyManager.RegisterPlayerOnServer(this);
+                LobbyManager.RegisterLobbyPlayerOnServer(this);
             }
             else if (DebugManager.DebugModeEnabled)
             {
@@ -79,7 +76,7 @@ namespace DishevelledBadger.FlashFrostVale.Networking
         {
             base.OnStartClient();
             // Add this player instance to the static list tracked by NetworkManagerFFV for UI purposes.
-            NetworkManagerFFV.AddClientSidePlayer(this);
+            NetworkManagerFFV.AddClientSideLobbyPlayer(this);
 
             if (DebugManager.DebugModeEnabled)
                 Debug.Log($"CLIENT [{netId}]: NetworkLobbyPlayerFFV.OnStartClient. Initial Values - Name: '{DisplayName}', IsLocal: {isLocalPlayer}, IsLeader: {IsLeader}, IsReady: {IsReady}");
@@ -131,8 +128,8 @@ namespace DishevelledBadger.FlashFrostVale.Networking
         public override void OnStopClient()
         {
             base.OnStopClient();
-            // Remove from static list; LobbyPagePanel will be notified via OnClientSidePlayerListChanged.
-            NetworkManagerFFV.RemoveClientSidePlayer(this);
+            // Remove from static list; LobbyPagePanel will be notified via OnClientSideLobbyPlayerListChanged.
+            NetworkManagerFFV.RemoveClientSideLobbyPlayer(this);
             if (DebugManager.DebugModeEnabled)
                 Debug.Log($"CLIENT [{netId}]: NetworkLobbyPlayerFFV.OnStopClient: Player {DisplayName} (netId {netId}) stopped on client.");
         }
@@ -145,7 +142,7 @@ namespace DishevelledBadger.FlashFrostVale.Networking
         {
             if (LobbyManager != null)
             {
-                LobbyManager.UnregisterPlayerOnServer(this);
+                LobbyManager.UnregisterLobbyPlayerOnServer(this);
             }
             base.OnStopServer();
         }

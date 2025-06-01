@@ -2,6 +2,10 @@ using UnityEngine;
 
 namespace DishevelledBadger.FlashFrostVale.Player
 {
+    // This class will manage the panel at the top of the screen
+    // It needs to request info from the server regarding the
+    // players stored resources and production which it can then display
+    // Did this straight from colony in the past.
     public class HeaderPanel : MonoBehaviour
     {
         public ResourcePanel foodPanel;
@@ -12,10 +16,7 @@ namespace DishevelledBadger.FlashFrostVale.Player
 
         private void Update()
         {
-            foodPanel.SetValue(colony.storage["food"], colony.production["food"]);
-            woodPanel.SetValue(colony.storage["wood"], colony.production["wood"]);
-            mudPanel.SetValue(colony.storage["mud"], colony.production["mud"]);
-            stonePanel.SetValue(colony.storage["stone"], colony.production["stone"]);
+
         }
     }
 }

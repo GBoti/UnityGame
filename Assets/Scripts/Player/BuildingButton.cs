@@ -4,10 +4,12 @@ using DishevelledBadger.FlashFrostVale.Server;
 
 namespace DishevelledBadger.FlashFrostVale.Player
 {
+    // This class was responsible for placing a building on a hex
+    // When this button is pressed the available buildings should
+    // pop up e.g, in a scrollable list
     public class BuildingButton : MonoBehaviour
     {
         public Building building;
-        public HexGridLayout hexGrid;
         public GameObject buildingTypes;
         public Colony colony;
 
@@ -16,9 +18,7 @@ namespace DishevelledBadger.FlashFrostVale.Player
             Button button = GetComponent<Button>();
             button.onClick.AddListener(() =>
             {
-                colony.AddBuilding(hexGrid.CurrentSelected, building);
-                buildingTypes.SetActive(false);
-                hexGrid.infoPanel.Show(hexGrid.CurrentSelected);
+
             });
         }
     }
